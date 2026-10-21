@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>EduSync — Prototype</title>
+<meta name="theme-color" content="#080b16">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="description" content="EduSync learning dashboard for students, teachers and administrators.">
+<title>EduSync — Learning Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -985,7 +988,7 @@
 
   <div class="topbar">
     <div class="brand"><div class="mark">Es</div><div class="name">EduSync</div></div>
-    <div class="tag">Clickable prototype — tap around, everything below is demo data</div>
+    <div class="tag">EduSync learning workspace</div>
     <div class="roles" id="roleSwitch">
       <button class="active" data-role="student">Student</button>
       <button data-role="teacher">Teacher</button>
@@ -1209,10 +1212,10 @@
             <div class="task-row"><div><div class="task-title">Announcement — Unit test on 24 Sep</div><div class="task-sub">Sent to Class 11-A</div></div></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px">
-            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-materials']').click()">📚 Materials</button>
-            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-announcements']').click()">📢 Announce</button>
-            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-engagement']').click()">📈 Engagement</button>
-            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-doubts']').click()">💬 Doubts</button>
+            <button class="btn ghost small" onclick="showTeacherScreen('t-materials')">📚 Materials</button>
+            <button class="btn ghost small" onclick="showTeacherScreen('t-announcements')">📢 Announce</button>
+            <button class="btn ghost small" onclick="showTeacherScreen('t-engagement')">📈 Engagement</button>
+            <button class="btn ghost small" onclick="showTeacherScreen('t-doubts')">💬 Doubts</button>
           </div>
         </div>
 
@@ -1590,5 +1593,73 @@
     requestAnimationFrame(update);
   });
 </script>
+
+<style>
+  #auth-gate{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at 15% 15%,rgba(0,240,255,.16),transparent 30%),radial-gradient(circle at 85% 85%,rgba(255,43,214,.15),transparent 32%),#080b16;color:#f7f8ff;font-family:Inter,system-ui,sans-serif;overflow:auto}
+  #auth-gate *{box-sizing:border-box} .auth-card{width:min(100%,430px);border:1px solid rgba(255,255,255,.14);border-radius:25px;padding:28px;background:rgba(18,24,43,.96);box-shadow:0 25px 90px #0008}
+  .auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:18px}.auth-logo-mark{display:grid;place-items:center;width:49px;height:49px;border-radius:16px;background:linear-gradient(135deg,#00eaff,#8c5cff,#ff2bd6);font-weight:900;color:#080b16;font-size:22px}.auth-card h1{margin:0;font-size:29px}.auth-muted{color:#aab4cb;font-size:13px;line-height:1.55}.auth-field{display:block;margin-top:16px;font-size:12px;color:#cbd4e8;font-weight:700}.auth-field input,.auth-field select{width:100%;margin-top:7px;padding:13px 14px;border:1px solid #36415c;border-radius:12px;background:#0d1324;color:#fff;font-size:15px;outline:none}.auth-field input:focus{border-color:#00dff3}.auth-submit{width:100%;margin-top:20px;padding:14px;border:0;border-radius:12px;background:linear-gradient(100deg,#00dff3,#8c5cff,#ff2bd6);color:#080b16;font-size:15px;font-weight:900;cursor:pointer}.auth-error{min-height:20px;color:#ff9c9c;font-size:12px;margin-top:10px}.auth-demo{margin-top:15px;padding:12px;border-radius:12px;background:#0d1324;color:#aab4cb;font-size:11px;line-height:1.55}.auth-demo b{color:#e8f4ff}.auth-top-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}.auth-logout{border:1px solid #d9e0ef;border-radius:9px;background:white;padding:7px 11px;font-size:12px;cursor:pointer}.admin-board{width:min(100%,850px);margin:20px auto;padding:22px;border-radius:20px;background:#fff;color:#172033;box-shadow:0 12px 38px #0002;max-height:calc(100vh - 40px);overflow:auto}.admin-board h2{margin-top:0}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.admin-stat{padding:16px;border-radius:14px;background:#f1f5fb}.admin-stat strong{display:block;font-size:26px}.admin-table{width:100%;border-collapse:collapse;font-size:13px}.admin-table th,.admin-table td{text-align:left;padding:9px;border-bottom:1px solid #e5e9f1}.admin-board textarea{width:100%;min-height:90px;padding:12px;border:1px solid #d3d9e5;border-radius:10px}.admin-board button{cursor:pointer}.admin-action{border:0;border-radius:10px;padding:10px 13px;background:#172033;color:#fff;font-weight:700;margin-top:8px}.admin-msg{color:#21784b;font-size:12px;min-height:18px}
+  body.auth-locked .topbar,body.auth-locked .phone-wrap,body.auth-locked .footnote{visibility:hidden}
+  @media(max-width:480px){.auth-card{padding:22px}.admin-board{padding:15px}}
+</style>
+<div id="auth-gate" aria-label="EduSync login">
+ <form class="auth-card" id="auth-form">
+  <div class="auth-logo"><div class="auth-logo-mark">Es</div><div><h1>EduSync</h1><div class="auth-muted">One connected space. Every step forward.</div></div></div>
+  <p class="auth-muted">Sign in to continue to your learning dashboard.</p>
+  <label class="auth-field">Account ID<input id="auth-id" autocomplete="username" placeholder="e.g. stu_thi_11114" required maxlength="80"></label>
+  <label class="auth-field">Password<input id="auth-password" type="password" autocomplete="current-password" placeholder="Enter your password" required maxlength="256"></label>
+  <button class="auth-submit" id="auth-submit" type="submit">Sign in</button>
+  <div class="auth-error" id="auth-error" role="alert" aria-live="polite"></div>
+  <div class="auth-demo" id="auth-help"><b>Secure sign-in</b><br>Use the account ID and password provided by your EduSync administrator.</div>
+ </form>
+</div>
+<div id="admin-root" class="screen-hidden" style="display:none"></div>
+<script src="./firebase-config.js"></script>
+<script>
+(function(){
+ 'use strict';
+ const gate=document.getElementById('auth-gate'), form=document.getElementById('auth-form'), error=document.getElementById('auth-error');
+ const idField=document.getElementById('auth-id'), passwordField=document.getElementById('auth-password'), submit=document.getElementById('auth-submit');
+ const roleSwitch=document.getElementById('roleSwitch'); if(roleSwitch) roleSwitch.style.display='none';
+ document.body.classList.add('auth-locked');
+ let activeUser=null;
+ const demoUsers=[];
+ demoUsers.push({id:'stu_thi_11114',password:'stu_thi_11114',role:'student',name:'Thilak'});
+ demoUsers.push({id:'par_thi_11114',password:'par_thi_11114',role:'parent',name:'Thilak Parent'});
+ demoUsers.push({id:'tea_raj_phy',password:'tea_raj_phy',role:'teacher',name:'Raj · Physics'});
+ for(let i=1;i<=2;i++){const n=String(i).padStart(2,'0');demoUsers.push({id:'admin_'+n,password:'admin_'+n,role:'admin',name:'Administrator '+n});}
+ const demoMode=new URLSearchParams(location.search).get('demo')==='1';
+ if(demoMode){document.getElementById('auth-help').innerHTML='<b>Local demo mode</b><br>Student: stu_thi_11114<br>Parent: par_thi_11114<br>Teacher: tea_raj_phy<br>Admins: admin_01, admin_02<br><small>For this local demo only, each password is identical to its ID. Never publish demo mode.</small>';}
+ else if(!window.EDUSYNC_FIREBASE_CONFIG || window.EDUSYNC_FIREBASE_CONFIG.apiKey==='PASTE_YOUR_FIREBASE_API_KEY_HERE'){
+   document.getElementById('auth-help').innerHTML='<b>Setup required</b><br>This build needs your Firebase project configuration before online sign-in can work. For local UI testing only, open this page with <code>?demo=1</code>. Do not publish demo mode.';
+ }
+ function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ function resetViews(){document.getElementById('admin-root').style.display='none';document.getElementById('admin-root').innerHTML='';document.querySelectorAll('#student-root,#teacher-root,#parent-root').forEach(x=>x.classList.add('screen-hidden'));}
+ function logout(){activeUser=null;resetViews();document.body.classList.add('auth-locked');gate.style.display='flex';passwordField.value='';error.textContent='';if(window.edusyncFirebaseLogout) window.edusyncFirebaseLogout().catch(()=>{});idField.focus();}
+ window.eduSyncLogout=logout;
+ function enter(user){
+   activeUser=user;gate.style.display='none';document.body.classList.remove('auth-locked');resetViews();
+   const roots={student:document.getElementById('student-root'),teacher:document.getElementById('teacher-root'),parent:document.getElementById('parent-root')};
+   if(user.role==='admin'){const a=document.getElementById('admin-root');a.style.display='block';a.classList.remove('screen-hidden');renderAdmin(user);return;}
+   const role=['teacher','parent'].includes(user.role)?user.role:'student';roots[role].classList.remove('screen-hidden');
+   const heading=document.querySelector('#'+role+'-root .role-header h1');if(heading)heading.textContent=(user.name||user.id)+(role==='student'?' · Learning':role==='parent'?' · Parent view':' · Class dashboard');
+   const wrap=document.querySelector('.phone-wrap');if(wrap){let bar=document.getElementById('session-bar');if(!bar){bar=document.createElement('div');bar.id='session-bar';bar.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;background:#fff;font-size:12px;color:#172033;border-bottom:1px solid #e5e7eb';wrap.prepend(bar);}bar.replaceChildren();const label=document.createElement('span');label.textContent='Signed in as '+user.id+' · '+user.role;const out=document.createElement('button');out.className='auth-logout';out.type='button';out.textContent='Sign out';out.addEventListener('click',logout);bar.append(label,out);wrap.style.visibility='visible';}
+ }
+ function renderAdmin(user){
+   const a=document.getElementById('admin-root');
+   a.innerHTML='<div class="admin-board"><div class="auth-top-actions"><div><div class="auth-muted">EDUSYNC CONTROL CENTRE</div><h2>Admin dashboard</h2><div class="auth-muted" id="admin-who"></div></div><button class="auth-logout" id="admin-logout" type="button">Sign out</button></div><div class="admin-grid"><div class="admin-stat"><span>Role</span><strong style="font-size:18px">Admin</strong></div><div class="admin-stat"><span>Data mode</span><strong id="admin-mode" style="font-size:18px">Loading</strong></div></div><h3>Post an announcement</h3><label class="auth-muted" for="admin-announcement">Announcement message</label><textarea id="admin-announcement" maxlength="2000" placeholder="Write an announcement..."></textarea><button class="admin-action" id="admin-post" type="button">Publish announcement</button><div class="admin-msg" id="admin-msg" aria-live="polite"></div><h3>Recent announcements</h3><div id="admin-ann-list"><p class="auth-muted">Loading announcements…</p></div><p class="auth-muted" style="margin-top:20px">Never share account passwords. Admin access is controlled by your configured authentication and database rules.</p></div>';
+   document.getElementById('admin-who').textContent='Signed in as '+user.id;
+   document.getElementById('admin-logout').addEventListener('click',logout);
+   document.getElementById('admin-mode').textContent=demoMode?'Local demo':'Firebase';
+   document.getElementById('admin-post').addEventListener('click',async()=>{const box=document.getElementById('admin-announcement'),msg=document.getElementById('admin-msg'),value=box.value.trim();if(!value){msg.textContent='Write an announcement first.';return;}const btn=document.getElementById('admin-post');btn.disabled=true;msg.textContent='Publishing…';try{if(demoMode){const all=JSON.parse(localStorage.getItem('edusync_announcements')||'[]');all.unshift({by:user.id,text:value,date:new Date().toLocaleString()});localStorage.setItem('edusync_announcements',JSON.stringify(all));renderAnnouncements(all);box.value='';msg.textContent='Saved on this device only (demo).';}else if(window.edusyncPublishAnnouncement){await window.edusyncPublishAnnouncement(value);box.value='';msg.textContent='Announcement published to the shared database.';await loadAnnouncements();}else{throw new Error('Firebase is not configured.');}}catch(e){msg.textContent=e.message||'Could not publish. Check your connection and permissions.';}finally{btn.disabled=false;}});
+   if(demoMode){renderAnnouncements(JSON.parse(localStorage.getItem('edusync_announcements')||'[]'));}
+   else if(window.edusyncLoadAnnouncements){loadAnnouncements();}
+   else{document.getElementById('admin-ann-list').innerHTML='<p class="auth-muted">Configure Firebase to load shared announcements.</p>';}
+ }
+ function renderAnnouncements(items){const list=document.getElementById('admin-ann-list');if(!list)return;list.replaceChildren();if(!items.length){list.innerHTML='<p class="auth-muted">No announcements yet.</p>';return;}items.slice(0,50).forEach(x=>{const card=document.createElement('div');card.className='admin-stat';const by=document.createElement('b');by.textContent=x.by||'EduSync admin';const p=document.createElement('p');p.textContent=x.text||'';const small=document.createElement('small');small.textContent=x.date||'';card.append(by,p,small);list.append(card);});}
+ async function loadAnnouncements(){try{const items=await window.edusyncLoadAnnouncements();renderAnnouncements(items);}catch(e){const list=document.getElementById('admin-ann-list');if(list)list.textContent='Announcements could not be loaded. Check Firebase configuration and Firestore rules.';}}
+ form.addEventListener('submit',async e=>{e.preventDefault();error.textContent='';submit.disabled=true;submit.textContent='Signing in…';const id=idField.value.trim().toLowerCase(),password=passwordField.value;try{let user;if(demoMode){user=demoUsers.find(x=>x.id===id&&x.password===password);if(!user)throw new Error('Incorrect demo account ID or password.');}else{if(!window.edusyncSignIn)throw new Error('Firebase is not configured yet. Follow the setup guide, or use ?demo=1 for local UI testing only.');user=await window.edusyncSignIn(id,password);}enter(user);}catch(err){error.textContent=err?.message?.includes('auth/invalid-credential')||err?.message?.includes('auth/wrong-password')||err?.message?.includes('auth/user-not-found')?'Incorrect account ID or password.':(err.message||'Sign-in failed. Please try again.');}finally{submit.disabled=false;submit.textContent='Sign in';}});
+})();
+</script>
+<script type="module" src="./app-firebase.js"></script>
 </body>
 </html>
