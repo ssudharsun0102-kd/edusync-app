@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EduSync — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --desk:#12172A; --desk-2:#1B2140;
+    --paper:#FAF6EC; --paper-line:#E6DFCE;
+    --ink:#1E2A4A; --ink-soft:#5B6584;
+    --coral:#FF6B4A; --coral-dark:#E5502F;
+    --sage:#4F8A6D; --sage-bg:#E4F0E8;
+    --amber:#DA9A2B; --amber-bg:#FBF0DA;
+    --lilac:#8D7FBF; --lilac-bg:#ECE8F7;
+    --skin:#E7B98A; --uniform:#3C5B8C;
+    --card:#FFFFFF;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; font-family:var(--font-body); overscroll-behavior:none; }
+  body{
+    overscroll-behavior:none;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #232B52 0%, transparent 60%),
+      radial-gradient(900px 600px at 110% 20%, #1F2748 0%, transparent 55%),
+      var(--desk);
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding: 28px 16px 48px;
+    padding-top: calc(28px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+  .topbar{ width:100%; max-width:420px; display:flex; flex-direction:column; align-items:center; margin-bottom:20px; }
+  .brand{ display:flex; align-items:center; gap:9px; color:#F4F1E6; margin-bottom:4px; }
+  .brand .mark{ width:26px; height:26px; border-radius:7px; background:var(--coral); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; color:#fff; font-size:14px; transform: rotate(-6deg); }
+  .brand .name{ font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:0.2px;}
+  .tag{ color:#9AA3C4; font-size:12.5px; margin-bottom:18px; text-align:center;}
+  .roles{ display:flex; gap:6px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.09); padding:4px; border-radius:999px; }
+  .roles button{ appearance:none; border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-family:var(--font-body); font-weight:600; font-size:13px; background:transparent; color:#C7CCE4; transition: background .18s ease, color .18s ease; }
+  .roles button.active{ background:var(--coral); color:#fff; }
+
+  .phone-wrap{ position:relative; }
+  .phone{ width:360px; max-width:86vw; height:740px; max-height:78vh; background:var(--paper); border-radius:38px; border:10px solid #0D1122; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04); overflow:hidden; position:relative; display:flex; flex-direction:column; }
+  .notch{ position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:22px; background:#0D1122; border-radius:0 0 14px 14px; z-index:30; }
+  .margin-line{ position:absolute; top:0; bottom:0; left:34px; width:1px; background: repeating-linear-gradient(to bottom, var(--coral) 0 2px, transparent 2px 6px); opacity:.35; z-index:1; }
+
+  .screen{ flex:1; min-height:0; overflow-y:scroll; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; padding: 34px 18px 14px 40px; position:relative; z-index:2; background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--paper-line) 27px 28px); }
+  .screen::-webkit-scrollbar{ width:0; }
+  .phone{ touch-action:pan-y; }
+  #student-root,#teacher-root,#parent-root{flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden;}
+  #student-root.screen-hidden,#teacher-root.screen-hidden,#parent-root.screen-hidden{display:none;}
+  .screen{min-height:0; flex:1 1 auto;}
+
+  .role-header{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+  .role-header h1{ font-family:var(--font-display); font-size:20px; margin:0 0 3px; color:var(--ink); }
+  .role-header p{ margin:0; font-size:12px; color:var(--ink-soft); }
+
+  h2.section{ font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--ink); margin: 16px 0 8px; letter-spacing:0.1px; }
+  h2.section:first-of-type{ margin-top:0; }
+
+  .card{ background:var(--card); border:1px solid var(--paper-line); border-radius:14px; padding:13px 14px; margin-bottom:10px; }
+  .chip{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .chip.done{ background:var(--sage-bg); color:var(--sage); }
+  .chip.pending{ background:var(--amber-bg); color:var(--amber); }
+  .chip.coral{ background:#FFE9E2; color:var(--coral-dark); }
+  .chip.lilac{ background:var(--lilac-bg); color:var(--lilac); }
+
+  .task-row{ display:flex; align-items:center; gap:11px; padding:10px 2px; border-bottom:1px solid var(--paper-line); }
+  .task-row:last-child{ border-bottom:none; }
+  .task-title{ font-size:13px; font-weight:600; color:var(--ink); }
+  .task-sub{ font-size:11px; color:var(--ink-soft); margin-top:1px; }
+
+  .btn{ appearance:none; border:none; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:13px; padding:11px 16px; border-radius:12px; background:var(--coral); color:#fff; width:100%; }
+  .btn:active{ background:var(--coral-dark); }
+  .btn.ghost{ background:transparent; border:1.5px solid var(--paper-line); color:var(--ink); }
+  .btn.small{ width:auto; padding:8px 14px; font-size:12px; }
+
+  input, textarea, select{ width:100%; font-family:var(--font-body); font-size:13px; color:var(--ink); background:var(--card); border:1px solid var(--paper-line); border-radius:10px; padding:9px 11px; margin-bottom:9px; }
+  label.field-label{ font-size:11px; font-weight:600; color:var(--ink-soft); margin-bottom:4px; display:block; }
+
+  .toast{ position:absolute; left:50%; bottom:78px; transform:translateX(-50%) translateY(12px); background:var(--ink); color:#fff; font-size:12px; font-weight:600; padding:9px 16px; border-radius:999px; opacity:0; pointer-events:none; transition: all .25s ease; z-index:60; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .thread{ display:flex; gap:10px; padding:11px 2px; border-bottom:1px solid var(--paper-line); cursor:pointer;}
+  .thread:last-child{ border-bottom:none; }
+
+  .screen-hidden{ display:none; }
+  .fade-in{ animation: fadeIn .2s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .diff-chip{ padding:5px 11px; border-radius:999px; font-size:11px; font-weight:700; border:1.5px solid var(--paper-line); cursor:pointer; background:#fff; color:var(--ink-soft);}
+  .diff-chip.sel{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .rank-row{ display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--paper-line);}
+  .rank-row:last-child{border-bottom:none;}
+  .rank-num{ width:20px; font-family:var(--font-display); font-weight:700; color:var(--ink-soft); font-size:13px;}
+  .rank-row.me{ background:#FFF3EE; margin:0 -8px; padding:9px 8px; border-radius:10px; border-bottom:none;}
+
+  .avatar-ico{ width:34px; height:34px; border-radius:10px; background:var(--lilac); display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--font-display); font-weight:600; font-size:13px; flex-shrink:0; }
+
+  /* ---- profile row / avatar svg ---- */
+  .profile-row{ display:flex; align-items:center; gap:11px; cursor:pointer; margin-bottom:14px; }
+  .profile-row .chev{ margin-left:auto; color:#B9B29A; font-size:16px; }
+  .uniform-avatar{ border-radius:50%; background:#FDEFDD; flex-shrink:0; overflow:hidden; }
+  .p-name{ font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--ink); }
+  .p-sub{ font-size:11px; color:var(--ink-soft); margin-top:1px; }
+  .p-stat-line{ font-size:11px; color:var(--coral-dark); font-weight:600; margin-top:2px; }
+
+  /* ---- performance mini bars ---- */
+  .perf-row{ display:flex; align-items:center; gap:9px; padding:6px 0; }
+  .perf-row .lbl{ width:88px; font-size:11.5px; font-weight:600; color:var(--ink); flex-shrink:0; }
+  .perf-track{ flex:1; height:7px; background:#EFE7D2; border-radius:99px; overflow:hidden; }
+  .perf-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg, var(--sage), #7CB99B); }
+  .perf-pct{ width:32px; text-align:right; font-size:11px; font-weight:700; color:var(--ink-soft); }
+
+  /* ---- timetable ---- */
+  .tt-row{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-bottom:1px solid var(--paper-line); }
+  .tt-row:last-child{ border-bottom:none; }
+  .tt-period{ width:22px; height:22px; border-radius:7px; background:var(--ink); color:#fff; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tt-time{ margin-left:auto; font-size:11px; color:var(--ink-soft); }
+
+  /* ---- subject panel (row-card style) ---- */
+  .subject-panel{ background: linear-gradient(165deg, #26305A 0%, var(--ink) 65%, #161C36 100%); border-radius:18px; padding:16px 12px; margin-bottom:10px; }
+  .panel-title{ color:#B9C0DD; font-size:11.5px; font-weight:700; margin: 2px 6px 10px; }
+  .subject-row-card{ display:flex; align-items:center; gap:11px; background:#fff; border-radius:13px; padding:11px 12px; margin-bottom:8px; cursor:pointer; }
+  .subject-row-card:last-child{ margin-bottom:0; }
+  .subject-row-card:active{ transform: scale(0.98); }
+  .subject-row-card .ic-box{ width:36px; height:36px; border-radius:10px; background:var(--paper); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .subject-row-card .nm{ font-weight:700; font-size:13px; color:var(--ink); flex:1; }
+  .subject-row-card .view{ color:var(--coral-dark); font-weight:700; font-size:12px; display:flex; align-items:center; gap:1px; flex-shrink:0; }
+
+  /* ---- subject grid (legacy, unused) ---- */
+  .subject-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .subject-card{ background:var(--card); border:1px solid var(--paper-line); border-radius:14px; padding:13px 12px; cursor:pointer; transition: transform .12s ease; }
+  .subject-card:active{ transform: scale(0.97); }
+  .subject-card .ic{ font-size:20px; margin-bottom:6px; display:block; }
+  .subject-card .nm{ font-size:12.5px; font-weight:700; color:var(--ink); }
+  .subject-card .ct{ font-size:10.5px; color:var(--ink-soft); margin-top:1px; }
+
+  /* ---- back button ---- */
+  .back-row{ display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .back-btn{ width:30px; height:30px; border-radius:9px; background:#fff; border:1px solid var(--paper-line); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; color:var(--ink); flex-shrink:0; }
+
+  /* ---- subject options accordion ---- */
+  .opt-row{ cursor:pointer; }
+  .opt-head{ display:flex; align-items:center; gap:10px; padding:11px 2px; }
+  .opt-head .num{ width:22px; height:22px; border-radius:7px; background:var(--paper-line); color:var(--ink); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .opt-head .chev{ margin-left:auto; color:#B9B29A; transition: transform .18s ease; }
+  .opt-row.open .chev{ transform: rotate(90deg); }
+  .opt-body{ display:none; padding: 0 2px 12px 32px; }
+  .opt-row.open .opt-body{ display:block; }
+  .opt-item{ font-size:12px; color:var(--ink-soft); padding:6px 0; border-bottom:1px dashed var(--paper-line); }
+  .opt-item:last-child{ border-bottom:none; }
+  .opt-item b{ color:var(--ink); font-weight:600; }
+
+  /* ---- full profile ---- */
+  .hero-avatar-wrap{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:14px; }
+  .hero-name{ font-family:var(--font-display); font-weight:700; font-size:19px; color:var(--ink); margin-top:10px; }
+  .hero-sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .stat-pair{ display:flex; gap:8px; margin-bottom:6px; }
+  .stat-box{ flex:1; background:var(--card); border:1px solid var(--paper-line); border-radius:12px; padding:10px; text-align:center; }
+  .stat-box .v{ font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--ink); }
+  .stat-box .l{ font-size:10px; color:var(--ink-soft); margin-top:1px; }
+
+  .badge{ display:inline-flex; align-items:center; gap:5px; background:var(--lilac-bg); color:var(--lilac); font-size:11px; font-weight:700; padding:6px 10px; border-radius:999px; margin:0 6px 6px 0; }
+
+  .tier-track{ display:flex; justify-content:space-between; align-items:center; margin: 10px 0 4px; }
+  .tier-step{ display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+  .tier-dot{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; background:#EFE7D2; opacity:0.45; }
+  .tier-step.reached .tier-dot{ opacity:1; }
+  .tier-step.current .tier-dot{ box-shadow: 0 0 0 3px rgba(255,107,74,0.35); }
+  .tier-lbl{ font-size:8.5px; font-weight:700; color:var(--ink-soft); }
+  .tier-step.current .tier-lbl{ color:var(--coral-dark); }
+
+  /* ---- fabs ---- */
+  .fab-col{ position:absolute; left:14px; bottom:88px; display:flex; flex-direction:column; gap:9px; z-index:15; }
+  .fab{ width:42px; height:42px; border-radius:13px; background:var(--ink); color:#fff; border:none; box-shadow:0 8px 18px -6px rgba(30,42,74,0.5); display:flex; align-items:center; justify-content:center; font-size:17px; cursor:pointer; }
+  .fab.alt{ background:var(--coral); }
+
+  /* ---- drawer (due dates) ---- */
+  .drawer-overlay{ position:absolute; inset:0; background:rgba(18,23,42,0.35); z-index:70; display:none; }
+  .drawer-overlay.show{ display:block; }
+  .drawer{ position:absolute; top:0; right:0; bottom:0; width:78%; background:var(--paper); z-index:71; transform:translateX(100%); transition: transform .22s ease; padding:20px 16px; overflow-y:auto; overscroll-behavior:contain; }
+  .drawer-overlay.show .drawer{ transform:translateX(0); }
+  .drawer h3{ font-family:var(--font-display); font-size:15px; color:var(--ink); margin:0 0 12px; }
+
+  /* ---- modal (announcements / chat) ---- */
+  .modal-overlay{ position:absolute; inset:0; background:rgba(18,23,42,0.4); z-index:70; display:none; align-items:flex-end; }
+  .modal-overlay.show{ display:flex; }
+  .modal{ background:var(--paper); width:100%; border-radius:20px 20px 0 0; padding:18px 16px 20px; max-height:70%; overflow-y:auto; overscroll-behavior:contain; transform:translateY(100%); transition: transform .22s ease; }
+  .modal-overlay.show .modal{ transform:translateY(0); }
+  .modal h3{ font-family:var(--font-display); font-size:15px; color:var(--ink); margin:0 0 12px; }
+  .close-x{ float:right; width:26px; height:26px; border-radius:8px; background:#fff; border:1px solid var(--paper-line); cursor:pointer; font-size:13px; }
+
+  /* ---- rank-up celebration ---- */
+  .rank-celebrate{ position:absolute; inset:0; z-index:120; background:rgba(18,23,42,0.48); display:none; align-items:center; justify-content:center; pointer-events:none; }
+  .rank-celebrate.show{ display:flex; }
+  .rank-celebrate-card{ width:82%; background:var(--paper); border:2px solid #E8D7A7; border-radius:22px; padding:22px 16px 20px; text-align:center; box-shadow:0 20px 50px rgba(18,23,42,.28); animation:rankPop .28s ease-out; }
+  @keyframes rankPop{ from{opacity:0; transform:scale(.78) translateY(8px)} to{opacity:1; transform:scale(1) translateY(0)} }
+  .rank-ribbon{ display:inline-block; background:var(--coral); color:#fff; font-size:10px; font-weight:800; letter-spacing:1.2px; padding:5px 12px; border-radius:999px; margin-bottom:8px; }
+  .rank-emblem{ width:78px; height:78px; margin:2px auto 10px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:42px; background:linear-gradient(145deg,#fff,#EFE7D2); box-shadow:0 8px 22px rgba(30,42,74,.14), inset 0 0 0 5px rgba(255,255,255,.7); }
+  .rank-celebrate h2{ font-family:var(--font-display); color:var(--ink); margin:0; font-size:20px; }
+  .rank-celebrate p{ margin:4px 0 0; color:var(--ink-soft); font-size:11.5px; }
+  .student-mini-avatar{ width:34px; height:34px; border-radius:50%; flex-shrink:0; }
+
+  /* ---- tabbar ---- */
+  .tabbar{ display:flex; border-top:1px solid var(--paper-line); background:var(--paper); padding: 8px 6px calc(10px + env(safe-area-inset-bottom,0px)); position:relative; z-index:5; }
+  .tabbar button{ flex:1; appearance:none; border:none; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 2px; font-family:var(--font-body); font-size:10px; font-weight:600; color:#A9A491; border-radius:10px; }
+  .tabbar button .ic{ font-size:16px; line-height:1;}
+  .tabbar button.active{ color:var(--coral); }
+
+  .footnote{ margin-top:16px; text-align:center; color:#7E88AA; font-size:11px;}
+</style>
+
+<style>
+  /* EduSync branded launch screen */
+  #edusync-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 18% 15%, rgba(255, 107, 68, .10), transparent 30%),
+      radial-gradient(circle at 85% 85%, rgba(255, 145, 58, .08), transparent 30%),
+      linear-gradient(145deg, #101827 0%, #0c1424 55%, #111b2e 100%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .45s ease, visibility .45s ease;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  #edusync-splash .splash-orb {
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgba(244, 119, 35, .22);
+    border-radius: 50%;
+    animation: edusync-orbit 4s linear infinite;
+  }
+  #edusync-splash .orb-one { width: 430px; height: 430px; top: -180px; right: -100px; }
+  #edusync-splash .orb-two { width: 320px; height: 320px; bottom: -130px; left: -90px; animation-direction: reverse; }
+  #edusync-splash .orb-three { width: 170px; height: 170px; top: 17%; left: 8%; border-style: dashed; }
+  #edusync-splash .splash-spark {
+    position: absolute;
+    color: #f28a32;
+    opacity: .7;
+    font-size: 25px;
+    animation: edusync-float 3s ease-in-out infinite;
+  }
+  #edusync-splash .spark-one { top: 18%; right: 17%; }
+  #edusync-splash .spark-two { bottom: 22%; left: 16%; animation-delay: -.9s; font-size: 18px; }
+  #edusync-splash .spark-three { top: 28%; left: 20%; animation-delay: -1.5s; font-size: 14px; }
+  #edusync-splash .splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(92vw, 620px);
+    padding: 26px 20px;
+    text-align: center;
+    animation: edusync-enter .7s cubic-bezier(.2,.8,.2,1) both;
+  }
+  #edusync-splash .splash-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  #edusync-splash .splash-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 12px;
+    background: var(--coral);
+    color: #fff;
+    font-size: 21px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    box-shadow: 0 7px 20px rgba(255, 107, 74, .24);
+    transform: rotate(-5deg);
+  }
+  #edusync-splash .splash-wordmark {
+    color: #F4F1E6;
+    font-size: clamp(30px, 6vw, 43px);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -.055em;
+  }
+  #edusync-splash .splash-tagline {
+    margin-top: 0;
+    color: #f4f6fb;
+    font-size: clamp(15px, 2.6vw, 19px);
+    font-weight: 750;
+    letter-spacing: -.025em;
+  }
+  #edusync-splash .splash-subtitle {
+    margin-top: 8px;
+    color: #aeb8c9;
+    font-size: clamp(12px, 2vw, 14px);
+    line-height: 1.55;
+  }
+  #edusync-splash .splash-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 17px;
+  }
+  #edusync-splash .splash-pill {
+    padding: 7px 13px;
+    border: 1px solid rgba(255, 135, 91, .22);
+    border-radius: 999px;
+    background: rgba(255,255,255,.055);
+    color: #ffc09e;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(149, 77, 25, .05);
+  }
+  #edusync-splash .splash-loader-wrap {
+    width: min(250px, 70vw);
+    margin-top: 27px;
+  }
+  #edusync-splash .loader-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #aeb8c9;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+  }
+  #edusync-splash .loader-track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255,255,255,.13);
+    box-shadow: inset 0 1px 2px rgba(105, 57, 22, .08);
+  }
+  #edusync-splash .loader-bar {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff9b35, #f36b21, #ffbd55);
+    box-shadow: 0 0 12px rgba(243, 107, 33, .35);
+    animation: edusync-loading 5.5s linear forwards;
+  }
+  #edusync-splash.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  @keyframes edusync-loading { from { width: 0%; } to { width: 100%; } }
+  @keyframes edusync-orbit { to { transform: rotate(360deg); } }
+  @keyframes edusync-float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-9px) rotate(12deg); } }
+  @keyframes edusync-enter { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (max-width: 480px) {
+    #edusync-splash .splash-content { padding: 18px 12px; }
+    #edusync-splash img { width: min(82vw, 340px); }
+    #edusync-splash .orb-three { left: -70px; }
+  }
+
+  /* Multi-scene animated backgrounds for the first page */
+  #edusync-splash .splash-bg {
+    position:absolute;
+    inset:0;
+    z-index:-3;
+    pointer-events:none;
+    opacity:0;
+    background-position:center;
+    background-size:cover;
+    animation: edusync-bg-cycle 18s ease-in-out infinite;
+  }
+  #edusync-splash .bg-one {
+    opacity:1;
+    background:
+      radial-gradient(circle at 22% 18%, rgba(255,107,74,.18), transparent 28%),
+      radial-gradient(circle at 82% 78%, rgba(255,179,112,.10), transparent 30%),
+      linear-gradient(145deg,#0b1220 0%,#121a2d 52%,#18223a 100%);
+  }
+  #edusync-splash .bg-two {
+    animation-delay:-4.5s;
+    background:
+      radial-gradient(circle at 75% 25%, rgba(126,97,255,.15), transparent 30%),
+      radial-gradient(circle at 18% 78%, rgba(255,107,74,.12), transparent 28%),
+      linear-gradient(135deg,#090d18 0%,#17152d 48%,#20182d 100%);
+  }
+  #edusync-splash .bg-three {
+    animation-delay:-9s;
+    background:
+      radial-gradient(circle at 35% 35%, rgba(53,190,255,.13), transparent 26%),
+      radial-gradient(circle at 78% 70%, rgba(255,107,74,.13), transparent 28%),
+      linear-gradient(150deg,#07131a 0%,#10202b 50%,#1b2734 100%);
+  }
+  #edusync-splash .bg-four {
+    animation-delay:-13.5s;
+    background:
+      radial-gradient(circle at 68% 30%, rgba(255,203,112,.13), transparent 26%),
+      radial-gradient(circle at 26% 72%, rgba(255,107,74,.16), transparent 28%),
+      linear-gradient(140deg,#11100c 0%,#1d1713 50%,#211c27 100%);
+  }
+
+  /* Modern game-launch atmosphere */
+  #edusync-splash::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 38px 38px;
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+    animation: edusync-grid-drift 7s linear infinite;
+  }
+  #edusync-splash::after {
+    content: "";
+    position: absolute;
+    inset: -25%;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 18% 30%, rgba(30, 95, 255, .34), transparent 23%),
+      radial-gradient(circle at 78% 24%, rgba(255, 55, 170, .30), transparent 22%),
+      radial-gradient(circle at 28% 78%, rgba(145, 55, 255, .28), transparent 24%),
+      radial-gradient(circle at 82% 78%, rgba(30, 160, 255, .22), transparent 20%);
+    filter: blur(42px);
+    transform: translate3d(0,0,0) scale(1);
+    animation: edusync-color-drift 5s ease-in-out infinite alternate;
+    z-index: -1;
+  }
+
+  #edusync-splash .splash-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: -1;
+    width: min(78vw, 500px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 129, 92, .17);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: edusync-ring-pulse 2.4s ease-in-out infinite;
+  }
+  #edusync-splash .splash-ring::before,
+  #edusync-splash .splash-ring::after {
+    content: "";
+    position: absolute;
+    inset: 9%;
+    border: 1px dashed rgba(255, 181, 117, .18);
+    border-radius: 50%;
+    animation: edusync-orbit 24s linear infinite;
+  }
+  #edusync-splash .splash-ring::after {
+    inset: 19%;
+    border-style: solid;
+    border-color: rgba(255,255,255,.06);
+    animation-direction: reverse;
+    animation-duration: 32s;
+  }
+  #edusync-splash .splash-chip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255, 171, 119, .24);
+    border-radius: 13px;
+    background: rgba(255,255,255,.055);
+    color: #ffc29f;
+    font-size: 19px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.12);
+    backdrop-filter: blur(8px);
+    animation: edusync-float 2.2s ease-in-out infinite;
+  }
+  #edusync-splash .chip-book { top: 24%; left: 15%; transform: rotate(-10deg); }
+  #edusync-splash .chip-star { top: 27%; right: 15%; animation-delay: -1.2s; }
+  #edusync-splash .chip-game { bottom: 25%; right: 19%; animation-delay: -2.1s; }
+  #edusync-splash .chip-bolt { bottom: 24%; left: 18%; animation-delay: -.6s; }
+  #edusync-splash .splash-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 15px;
+    padding: 7px 11px;
+    border: 1px solid rgba(255, 145, 99, .2);
+    border-radius: 999px;
+    background: rgba(255, 119, 69, .07);
+    color: #ffb18b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  #edusync-splash .kicker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff875c;
+    box-shadow: 0 0 10px #ff875c;
+    animation: edusync-dot-blink 1.4s ease-in-out infinite;
+  }
+  #edusync-splash .splash-tagline {
+    text-shadow: 0 0 28px rgba(255, 130, 85, .12);
+  }
+  #edusync-splash .splash-pill {
+    transition: transform .25s ease, background .25s ease, border-color .25s ease;
+  }
+  #edusync-splash .splash-pill:hover {
+    transform: translateY(-3px);
+    background: rgba(255,255,255,.1);
+    border-color: rgba(255, 145, 99, .42);
+  }
+  #edusync-splash .loader-bar {
+    position: relative;
+    overflow: hidden;
+  }
+  #edusync-splash .loader-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -35%;
+    width: 28%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+    animation: edusync-loader-shine 1.1s ease-in-out infinite;
+  }
+  @keyframes edusync-bg-cycle {
+    0%, 24% { opacity:1; transform:scale(1); }
+    25%, 100% { opacity:0; transform:scale(1.04); }
+  }
+
+  @keyframes edusync-color-drift {
+    0% { transform: translate3d(-6%, 2%, 0) scale(1); }
+    50% { transform: translate3d(7%, -5%, 0) scale(1.08); }
+    100% { transform: translate3d(-4%, 6%, 0) scale(1.02); }
+  }
+  @keyframes edusync-grid-drift {
+    from { background-position: 0 0, 0 0; }
+    to { background-position: 38px 38px, 38px 38px; }
+  }
+  @keyframes edusync-ring-pulse {
+    0%, 100% { opacity: .48; scale: .96; }
+    50% { opacity: .9; scale: 1.04; }
+  }
+  @keyframes edusync-dot-blink {
+    0%, 100% { opacity: .45; }
+    50% { opacity: 1; }
+  }
+  @keyframes edusync-loader-shine {
+    to { left: 110%; }
+  }
+  @media (max-width: 480px) {
+    #edusync-splash .splash-chip { width: 34px; height: 34px; border-radius: 10px; font-size: 15px; }
+    #edusync-splash .chip-book { left: 7%; }
+    #edusync-splash .chip-star { right: 7%; }
+    #edusync-splash .chip-game { right: 8%; }
+    #edusync-splash .chip-bolt { left: 8%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #edusync-splash *, #edusync-splash *::before { animation-duration: .01ms !important; }
+    #edusync-splash { transition: none; }
+  }
+</style>
+
+<style>
+  /* ===== HIGH-END RGB GAME LAUNCH SPLASH ===== */
+  #edusync-splash{
+    background:#05060d !important;
+    --rgb-a:#00f0ff;
+    --rgb-b:#7a5cff;
+    --rgb-c:#ff2bd6;
+    --rgb-d:#ff6a00;
+  }
+  #edusync-splash::after{
+    content:"";
+    position:absolute;
+    inset:-3px;
+    z-index:-3;
+    background:conic-gradient(from 0deg, var(--rgb-a), var(--rgb-b), var(--rgb-c), var(--rgb-d), #ffe600, var(--rgb-a));
+    filter:blur(18px);
+    opacity:.45;
+    animation:rgbAura 5s linear infinite;
+  }
+  #edusync-splash::before{
+    background-image:
+      linear-gradient(rgba(0,240,255,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,43,214,.055) 1px, transparent 1px),
+      repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.018) 3px 4px) !important;
+    background-size:38px 38px,38px 38px,100% 4px !important;
+    mask-image:none !important;
+    opacity:.8;
+    animation:edusync-grid-drift 9s linear infinite !important;
+  }
+  #edusync-splash .splash-content{
+    position:relative;
+    padding:34px 26px 30px;
+    border:1px solid rgba(0,240,255,.18);
+    border-radius:28px;
+    background:linear-gradient(145deg,rgba(8,13,28,.86),rgba(10,8,25,.72));
+    box-shadow:0 0 45px rgba(0,240,255,.08), inset 0 0 35px rgba(255,43,214,.04);
+    backdrop-filter:blur(10px);
+  }
+  #edusync-splash .splash-content::before{
+    content:"";
+    position:absolute;
+    inset:7px;
+    border-radius:22px;
+    border:1px solid transparent;
+    background:linear-gradient(90deg,var(--rgb-a),var(--rgb-b),var(--rgb-c),var(--rgb-d),var(--rgb-a)) border-box;
+    -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    opacity:.42;
+    animation:rgbBorder 3s linear infinite;
+    pointer-events:none;
+  }
+  #edusync-splash .splash-logo-mark{
+    position:relative;
+    background:var(--coral) !important;
+    color:#fff !important;
+    box-shadow:0 7px 20px rgba(255,107,74,.24) !important;
+    animation:none !important;
+  }
+  #edusync-splash .splash-wordmark{
+    background:none !important;
+    -webkit-background-clip:initial !important;
+    background-clip:initial !important;
+    color:#F4F1E6 !important;
+    text-shadow:none !important;
+    animation:none !important;
+  }
+  #edusync-splash .splash-tagline{
+    text-shadow:0 0 8px rgba(0,240,255,.45),0 0 22px rgba(255,43,214,.18) !important;
+  }
+  #edusync-splash .splash-ring{
+    width:min(90vw,560px) !important;
+    border-color:rgba(0,240,255,.35) !important;
+    box-shadow:0 0 35px rgba(0,240,255,.12),inset 0 0 35px rgba(255,43,214,.08);
+  }
+  #edusync-splash .splash-ring::before{
+    border-color:rgba(255,43,214,.35) !important;
+  }
+  #edusync-splash .splash-chip{
+    border-color:rgba(0,240,255,.35) !important;
+    background:rgba(6,12,29,.62) !important;
+    color:#8ffcff !important;
+    box-shadow:0 0 16px rgba(0,240,255,.12),inset 0 0 12px rgba(122,92,255,.12) !important;
+  }
+  #edusync-splash .chip-star{color:#ff73df !important;box-shadow:0 0 18px rgba(255,43,214,.2) !important;}
+  #edusync-splash .chip-game{color:#a98cff !important;}
+  #edusync-splash .chip-bolt{color:#ffb52e !important;}
+  #edusync-splash .splash-kicker{
+    background:rgba(0,240,255,.055) !important;
+    border-color:rgba(0,240,255,.24) !important;
+    color:#8ffcff !important;
+    box-shadow:0 0 18px rgba(0,240,255,.07);
+  }
+  #edusync-splash .kicker-dot{
+    background:#00f0ff !important;
+    box-shadow:0 0 8px #00f0ff,0 0 18px #00f0ff !important;
+  }
+  #edusync-splash .splash-loader-wrap{
+    width:min(330px,78vw);
+    margin-top:31px;
+  }
+  #edusync-splash .loader-label{
+    color:#a8b8d8 !important;
+    font-size:10px;
+  }
+  #edusync-splash .loader-label .loader-percent{
+    color:#fff !important;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:14px;
+    letter-spacing:.05em;
+    text-shadow:0 0 10px rgba(0,240,255,.75);
+  }
+  #edusync-splash .loader-track{
+    height:9px !important;
+    border:1px solid rgba(0,240,255,.18);
+    background:rgba(255,255,255,.055) !important;
+    box-shadow:0 0 15px rgba(0,240,255,.1),inset 0 0 7px rgba(0,0,0,.5) !important;
+  }
+  #edusync-splash .loader-bar{
+    width:0% !important;
+    background:linear-gradient(90deg,#00eaff 0%,#7a5cff 34%,#ff2bd6 64%,#ff6a00 84%,#ffe600 100%) !important;
+    box-shadow:0 0 9px #00eaff,0 0 18px rgba(255,43,214,.7),0 0 28px rgba(255,106,0,.35) !important;
+    animation:none !important;
+    transition:width .05s linear;
+  }
+  #edusync-splash .loader-bar::before{
+    content:"";
+    position:absolute;
+    inset:-8px -2px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent);
+    filter:blur(3px);
+    animation:loaderSweep .85s linear infinite;
+  }
+  #edusync-splash .loader-bar::after{
+    width:18% !important;
+    background:linear-gradient(90deg,transparent,#fff,transparent) !important;
+    filter:blur(1px);
+    animation:loaderShine .55s linear infinite !important;
+  }
+  #edusync-splash .splash-status{
+    margin-top:11px;
+    color:#7283a8;
+    font:700 9px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    min-height:13px;
+  }
+  #edusync-splash .splash-hud{
+    display:flex;
+    justify-content:space-between;
+    width:min(330px,78vw);
+    margin-top:8px;
+    color:#53678f;
+    font:700 8px ui-monospace,SFMono-Regular,Menlo,monospace;
+    letter-spacing:.1em;
+  }
+  @keyframes rgbAura{to{transform:rotate(360deg)}}
+  @keyframes rgbBorder{to{filter:hue-rotate(360deg)}}
+  @keyframes logoRGB{50%{filter:hue-rotate(80deg) brightness(1.15)}100%{filter:hue-rotate(360deg)}}
+  @keyframes wordRGB{to{background-position:240% center}}
+  @keyframes loaderSweep{to{transform:translateX(500%)}}
+  @keyframes loaderShine{to{left:115%}}
+  @media (prefers-reduced-motion: reduce){
+    #edusync-splash .loader-bar{transition:none !important}
+  }
+</style>
+
+
+<style>
+  /* ===== CINEMATIC ORANGE + WHITE LAUNCH ANIMATION ===== */
+  #edusync-splash{
+    background:
+      radial-gradient(circle at 50% 48%, rgba(255,107,74,.16), transparent 20%),
+      radial-gradient(circle at 50% 52%, rgba(255,159,99,.07), transparent 42%),
+      linear-gradient(180deg,#0b1020 0%,#070b16 52%,#05070d 100%) !important;
+  }
+  #edusync-splash::after{
+    content:"";
+    position:absolute;
+    inset:-18%;
+    z-index:-3;
+    background:radial-gradient(circle at 50% 50%, rgba(255,107,74,.22), transparent 31%, rgba(255,107,74,.06) 48%, transparent 67%);
+    filter:blur(14px);
+    opacity:.75;
+    animation:cinematicAura 3.8s ease-in-out infinite;
+  }
+  #edusync-splash::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-2;
+    pointer-events:none;
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(255,107,74,.06) 48%, transparent 52%),
+      linear-gradient(90deg, transparent 0%, rgba(255,255,255,.025) 50%, transparent 100%);
+    animation:cinematicScan 2.9s ease-in-out infinite;
+    mask-image:linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  }
+  #edusync-splash .splash-content{
+    border:1px solid rgba(255,107,74,.18) !important;
+    background:linear-gradient(145deg,rgba(12,17,32,.90),rgba(7,10,18,.78)) !important;
+    box-shadow:0 24px 70px rgba(0,0,0,.45), 0 0 45px rgba(255,107,74,.08), inset 0 0 28px rgba(255,255,255,.02) !important;
+    animation:contentRise 1s cubic-bezier(.16,.84,.24,1) both;
+  }
+  #edusync-splash .splash-content::before{
+    border:1px solid rgba(255,107,74,.23) !important;
+    background:none !important;
+    opacity:.7 !important;
+    animation:orangeFrame 2.4s ease-in-out infinite !important;
+  }
+  #edusync-splash .splash-ring{
+    width:min(78vw,480px) !important;
+    border-color:rgba(255,107,74,.24) !important;
+    box-shadow:0 0 40px rgba(255,107,74,.08), inset 0 0 40px rgba(255,107,74,.035) !important;
+    animation:portalPulse 3s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+  #edusync-splash .splash-ring::before{
+    border-color:rgba(255,185,145,.22) !important;
+    animation:portalSpin 12s linear infinite !important;
+  }
+  #edusync-splash .splash-ring::after{
+    border-color:rgba(255,255,255,.075) !important;
+    animation:portalSpinReverse 17s linear infinite !important;
+  }
+  #edusync-splash .splash-chip{
+    border-color:rgba(255,107,74,.24) !important;
+    background:rgba(13,18,31,.72) !important;
+    color:#ffd1bf !important;
+    box-shadow:0 0 20px rgba(255,107,74,.10), inset 0 0 12px rgba(255,255,255,.025) !important;
+    animation:chipFloat 3.6s ease-in-out infinite !important;
+  }
+  #edusync-splash .chip-star{color:#fff !important;}
+  #edusync-splash .chip-game{color:#ff9a7c !important;}
+  #edusync-splash .chip-bolt{color:#fff !important;}
+  #edusync-splash .splash-spark{
+    color:#ff9270 !important;
+    animation:sparkFloat 2.8s ease-in-out infinite !important;
+    text-shadow:0 0 12px rgba(255,107,74,.55);
+  }
+  #edusync-splash .splash-kicker{
+    background:rgba(255,107,74,.06) !important;
+    border-color:rgba(255,107,74,.20) !important;
+    color:#ffc0a9 !important;
+    box-shadow:0 0 20px rgba(255,107,74,.06) !important;
+    animation:fadeSlide .7s .15s both;
+  }
+  #edusync-splash .kicker-dot{
+    background:#ff6b4a !important;
+    box-shadow:0 0 8px #ff6b4a,0 0 18px rgba(255,107,74,.65) !important;
+    animation:dotPulse 1.1s ease-in-out infinite !important;
+  }
+  #edusync-splash .splash-brand{
+    animation:brandSettle .95s .28s cubic-bezier(.18,.88,.22,1) both !important;
+  }
+  #edusync-splash .splash-logo-mark{
+    background:var(--coral) !important;
+    color:#fff !important;
+    box-shadow:0 7px 20px rgba(255,107,74,.28), 0 0 0 0 rgba(255,107,74,.28) !important;
+    animation:logoPop 1.05s .34s cubic-bezier(.18,.88,.22,1) both, logoGlow 2.2s 1.4s ease-in-out infinite !important;
+  }
+  #edusync-splash .splash-wordmark{
+    color:#F4F1E6 !important;
+    text-shadow:none !important;
+    animation:wordReveal .9s .48s cubic-bezier(.2,.75,.2,1) both !important;
+  }
+  #edusync-splash .splash-tagline{
+    color:#f8f6ef !important;
+    text-shadow:0 0 18px rgba(255,107,74,.10) !important;
+    animation:fadeSlide .8s .68s both !important;
+  }
+  #edusync-splash .splash-subtitle{
+    animation:fadeSlide .8s .84s both !important;
+  }
+  #edusync-splash .splash-pills{
+    animation:fadeSlide .8s 1s both !important;
+  }
+  #edusync-splash .splash-pill{
+    border-color:rgba(255,107,74,.16) !important;
+    background:rgba(255,255,255,.035) !important;
+    color:#ffc5b2 !important;
+  }
+  #edusync-splash .splash-loader-wrap{
+    animation:fadeSlide .9s 1.12s both !important;
+  }
+  #edusync-splash .loader-label{color:#a9b3ca !important;}
+  #edusync-splash .loader-label .loader-percent{
+    color:#fff !important;
+    text-shadow:0 0 10px rgba(255,107,74,.55) !important;
+  }
+  #edusync-splash .loader-track{
+    border:1px solid rgba(255,107,74,.16) !important;
+    background:rgba(255,255,255,.06) !important;
+    box-shadow:0 0 18px rgba(255,107,74,.08), inset 0 0 7px rgba(0,0,0,.5) !important;
+  }
+  #edusync-splash .loader-bar{
+    background:linear-gradient(90deg,#ff5d3d,#ff6b4a,#ff9a79) !important;
+    box-shadow:0 0 10px rgba(255,107,74,.60),0 0 22px rgba(255,107,74,.22) !important;
+  }
+  #edusync-splash .loader-bar::before{
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent) !important;
+  }
+  #edusync-splash .loader-bar::after{
+    background:linear-gradient(90deg,transparent,#fff,transparent) !important;
+  }
+  #edusync-splash .splash-status{
+    color:#7784a2 !important;
+    animation:statusBlink 1.6s ease-in-out infinite !important;
+  }
+  #edusync-splash .splash-hud{color:#5c6988 !important;}
+  @keyframes cinematicAura{0%,100%{transform:scale(.92);opacity:.55}50%{transform:scale(1.07);opacity:.95}}
+  @keyframes cinematicScan{0%{transform:translateY(-18%);opacity:0}22%{opacity:1}75%{opacity:.7}100%{transform:translateY(18%);opacity:0}}
+  @keyframes contentRise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes orangeFrame{0%,100%{opacity:.35}50%{opacity:.8}}
+  @keyframes portalPulse{0%,100%{opacity:.35;transform:translate(-50%,-50%) scale(.92)}50%{opacity:.8;transform:translate(-50%,-50%) scale(1.05)}}
+  @keyframes portalSpin{to{transform:rotate(360deg)}}
+  @keyframes portalSpinReverse{to{transform:rotate(-360deg)}}
+  @keyframes chipFloat{0%,100%{translate:0 0;rotate:-4deg}50%{translate:0 -10px;rotate:4deg}}
+  @keyframes sparkFloat{0%,100%{transform:translateY(0) scale(.9);opacity:.35}50%{transform:translateY(-8px) scale(1.15);opacity:1}}
+  @keyframes dotPulse{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.15);opacity:1}}
+  @keyframes brandSettle{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+  @keyframes logoPop{0%{opacity:0;transform:rotate(-13deg) scale(.55)}65%{opacity:1;transform:rotate(2deg) scale(1.08)}100%{opacity:1;transform:rotate(-5deg) scale(1)}}
+  @keyframes logoGlow{0%,100%{box-shadow:0 7px 20px rgba(255,107,74,.28),0 0 0 0 rgba(255,107,74,.10)}50%{box-shadow:0 7px 26px rgba(255,107,74,.38),0 0 0 8px rgba(255,107,74,.035)}}
+  @keyframes wordReveal{from{opacity:0;transform:translateX(18px);filter:blur(7px)}to{opacity:1;transform:none;filter:none}}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes statusBlink{0%,100%{opacity:.65}50%{opacity:1}}
+  @media (prefers-reduced-motion: reduce){
+    #edusync-splash *,#edusync-splash *::before,#edusync-splash *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;}
+  }
+</style>
+
+
+<style>
+  /* Blue + Pink + Black + Purple cinematic first-page background */
+  #edusync-splash{
+    background:
+      radial-gradient(900px 650px at 12% 18%, rgba(39, 110, 255, .48), transparent 58%),
+      radial-gradient(760px 560px at 88% 20%, rgba(190, 52, 255, .40), transparent 56%),
+      radial-gradient(820px 620px at 72% 86%, rgba(255, 61, 164, .30), transparent 58%),
+      radial-gradient(700px 520px at 18% 86%, rgba(44, 76, 180, .24), transparent 60%),
+      linear-gradient(145deg, #03040a 0%, #080b18 34%, #0c0920 62%, #05050d 100%) !important;
+    background-size:140% 140%, 135% 135%, 130% 130%, 125% 125%, 100% 100% !important;
+    background-position:0% 0%, 100% 0%, 100% 100%, 0% 100%, center !important;
+    animation: edusyncColorDrift 14s ease-in-out infinite alternate;
+  }
+  #edusync-splash::after{
+    background:
+      radial-gradient(circle at 24% 28%, rgba(67, 130, 255, .26), transparent 26%),
+      radial-gradient(circle at 76% 30%, rgba(177, 70, 255, .22), transparent 27%),
+      radial-gradient(circle at 68% 75%, rgba(255, 69, 169, .18), transparent 28%),
+      radial-gradient(circle at 28% 78%, rgba(74, 92, 210, .16), transparent 25%) !important;
+    filter:blur(34px);
+    opacity:.9 !important;
+    animation:edusyncBackdropFloat 10s ease-in-out infinite alternate !important;
+  }
+  @keyframes edusyncColorDrift{
+    0%{ background-position:0% 0%, 100% 0%, 100% 100%, 0% 100%, center !important; }
+    50%{ background-position:8% 10%, 92% 8%, 94% 90%, 6% 92%, center !important; }
+    100%{ background-position:14% 4%, 86% 14%, 88% 84%, 10% 86%, center !important; }
+  }
+  @keyframes edusyncBackdropFloat{
+    0%{ transform:translate3d(-2%, -1%, 0) scale(1); }
+    50%{ transform:translate3d(2%, 1%, 0) scale(1.04); }
+    100%{ transform:translate3d(-1%, 2%, 0) scale(1.02); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #edusync-splash, #edusync-splash::after{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="edusync-splash" aria-label="EduSync is starting" role="status">
+  <div class="splash-bg bg-one"></div>
+  <div class="splash-bg bg-two"></div>
+  <div class="splash-bg bg-three"></div>
+  <div class="splash-bg bg-four"></div>
+  <div class="splash-orb orb-one"></div>
+  <div class="splash-orb orb-two"></div>
+  <div class="splash-orb orb-three"></div>
+  <div class="splash-ring"></div>
+  <div class="splash-chip chip-book" aria-hidden="true">▤</div>
+  <div class="splash-chip chip-star" aria-hidden="true">✦</div>
+  <div class="splash-chip chip-game" aria-hidden="true">◇</div>
+  <div class="splash-chip chip-bolt" aria-hidden="true">ϟ</div>
+  <div class="splash-spark spark-one">✦</div>
+  <div class="splash-spark spark-two">✧</div>
+  <div class="splash-spark spark-three">✦</div>
+  <div class="splash-content">
+    <div class="splash-kicker"><span class="kicker-dot"></span> YOUR LEARNING WORLD</div>
+    <div class="splash-brand" aria-label="EduSync logo">
+      <span class="splash-logo-mark">Es</span>
+      <span class="splash-wordmark">EduSync</span>
+    </div>
+    <div class="splash-tagline">One connected space. Every step forward.</div>
+    <div class="splash-subtitle">Your unified learning companion for students, teachers and parents.</div>
+    <div class="splash-pills">
+      <span class="splash-pill">✦ Students</span>
+      <span class="splash-pill">✦ Teachers</span>
+      <span class="splash-pill">✦ Parents</span>
+    </div>
+    <div class="splash-loader-wrap">
+      <div class="loader-label"><span>INITIALIZING EDUSYNC</span><span class="loader-percent" id="splash-percent">0%</span></div>
+      <div class="loader-track"><div class="loader-bar" id="splash-loader-bar"></div></div>
+      <div class="splash-status" id="splash-status">POWERING UP THE LEARNING CORE...</div>
+      <div class="splash-hud"><span id="splash-stage">BOOT 01</span></div>
+    </div>
+  </div>
+</div>
+
+
+  <div class="topbar">
+    <div class="brand"><div class="mark">Es</div><div class="name">EduSync</div></div>
+    <div class="tag">Clickable prototype — tap around, everything below is demo data</div>
+    <div class="roles" id="roleSwitch">
+      <button class="active" data-role="student">Student</button>
+      <button data-role="teacher">Teacher</button>
+      <button data-role="parent">Parent</button>
+    </div>
+  </div>
+
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="margin-line"></div>
+
+      <!-- ============ STUDENT ============ -->
+      <div id="student-root">
+
+        <div class="screen" id="s-home">
+          <div class="profile-row" onclick="showStudentScreen('s-profile')">
+            <svg class="uniform-avatar" width="44" height="44" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="22" fill="#FDEFDD"/>
+              <path d="M22 34c-7 0-12 3-12 6v4h24v-4c0-3-5-6-12-6z" fill="var(--uniform)"/>
+              <path d="M17 30l5 6 5-6" fill="none" stroke="#fff" stroke-width="2"/>
+              <circle cx="22" cy="18" r="9" fill="var(--skin)"/>
+              <path d="M13 18c0-6 18-6 18 0 0-8-18-8-18 0z" fill="#3C2A1E"/>
+            </svg>
+            <div>
+              <div class="p-name">Thilak</div>
+              <div class="p-sub">Grade 11 · A · Science Stream (Computer Science)</div>
+              <div class="p-stat-line">🔥 6-day streak · 420 XP</div>
+            </div>
+            <div class="chev">›</div>
+          </div>
+
+          <div class="subject-panel">
+            <div class="panel-title">Live Classes · Assignments</div>
+            <div class="subject-row-card" onclick="openSubject('Chemistry','🧪')"><div class="ic-box">🧪</div><div class="nm">Chemistry</div><div class="view">View <span>›</span></div></div>
+            <div class="subject-row-card" onclick="openSubject('Physics','⚛️')"><div class="ic-box">⚛️</div><div class="nm">Physics</div><div class="view">View <span>›</span></div></div>
+            <div class="subject-row-card" onclick="openSubject('Maths','📐')"><div class="ic-box">📐</div><div class="nm">Maths</div><div class="view">View <span>›</span></div></div>
+            <div class="subject-row-card" onclick="openSubject('Computer Science','💻')"><div class="ic-box">💻</div><div class="nm">Computer Science</div><div class="view">View <span>›</span></div></div>
+            <div class="subject-row-card" onclick="openSubject('English','📖')"><div class="ic-box">📖</div><div class="nm">English</div><div class="view">View <span>›</span></div></div>
+          </div>
+          <div class="card" style="margin-top:10px">
+            <div class="panel-title" style="margin-bottom:8px">Academic Hub</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+              <button class="btn ghost small" onclick="showStudentScreen('s-tasks')">✓ Daily Tasks</button>
+              <button class="btn ghost small" onclick="showStudentScreen('s-revision')">📅 Revision</button>
+              <button class="btn ghost small" onclick="showStudentScreen('s-materials')">📚 Materials</button>
+              <button class="btn ghost small" onclick="showStudentScreen('s-announcements')">📢 Updates</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- subject detail -->
+        <div class="screen screen-hidden" id="s-subject">
+          <div class="back-row">
+            <div class="back-btn" onclick="showStudentScreen('s-home')">←</div>
+            <div><h1 id="subjTitle" style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Maths</h1><p style="margin:0; font-size:11.5px; color:var(--ink-soft);">Everything for this subject</p></div>
+          </div>
+          <div class="card" id="subjOptions" style="padding:4px 12px;"></div>
+        </div>
+
+        <div class="screen screen-hidden" id="s-doubts">
+          <div class="back-row"><div class="back-btn" onclick="showStudentScreen('s-home')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Doubts</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Private, just between you and your teacher</p></div><div class="avatar-ico">S</div></div>
+          <div class="card" style="padding:4px 14px;">
+            <div class="thread" onclick="openThread()">
+              <div class="avatar-ico" style="background:var(--sage); font-size:11px;">MC</div>
+              <div style="flex:1;"><div style="display:flex; justify-content:space-between;"><span class="task-title">Smt. Manochitra</span><span class="chip done">Answered</span></div><div class="task-sub">Why does the plant wilt at night?</div></div>
+            </div>
+            <div class="thread">
+              <div class="avatar-ico" style="background:var(--lilac); font-size:11px;">RK</div>
+              <div style="flex:1;"><div style="display:flex; justify-content:space-between;"><span class="task-title">Mr. Ravi Kumar</span><span class="chip pending">Pending</span></div><div class="task-sub">Confused about the 2nd algebra problem</div></div>
+            </div>
+          </div>
+          <h2 class="section">Ask a new doubt</h2>
+          <div class="card">
+            <select><option>Science — Smt. Manochitra</option><option>Maths — Mr. Ravi Kumar</option></select>
+            <textarea rows="2" placeholder="Type your question privately..."></textarea>
+            <button class="btn" onclick="showToast('student','Doubt sent privately')">Send</button>
+          </div>
+        </div>
+
+        <div class="screen screen-hidden" id="s-rank">
+          <div class="back-row">
+            <div class="back-btn" onclick="showStudentScreen('s-profile')">←</div>
+            <div><h1 style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Class Leaderboard</h1><p style="margin:0; font-size:11.5px; color:var(--ink-soft);">Class 11-A · resets weekly</p></div>
+          </div>
+          <div class="card">
+            <div class="rank-row"><div class="rank-num">1</div><div class="avatar-ico" style="background:var(--amber); font-size:11px;">AK</div><div style="flex:1;"><div class="task-title">Arjun K.</div></div><span class="task-sub">610 XP</span></div>
+            <div class="rank-row"><div class="rank-num">2</div><div class="avatar-ico" style="background:var(--lilac); font-size:11px;">PV</div><div style="flex:1;"><div class="task-title">Priya V.</div></div><span class="task-sub">545 XP</span></div>
+            <div class="rank-row me"><div class="rank-num">3</div><div class="avatar-ico" style="background:var(--coral); font-size:11px;">T</div><div style="flex:1;"><div class="task-title">Thilak (you)</div></div><span class="task-sub" style="font-weight:700; color:var(--coral-dark);">420 XP</span></div>
+            <div class="rank-row"><div class="rank-num">4</div><div class="avatar-ico" style="background:var(--sage); font-size:11px;">SD</div><div style="flex:1;"><div class="task-title">Sudharsun D.</div></div><span class="task-sub">390 XP</span></div>
+          </div>
+        </div>
+
+        <!-- full profile -->
+        <div class="screen screen-hidden" id="s-profile">
+          <div class="back-row">
+            <div class="back-btn" onclick="showStudentScreen('s-home')">←</div>
+            <div><h1 style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Profile</h1></div>
+          </div>
+
+          <div class="hero-avatar-wrap">
+            <svg class="uniform-avatar" width="86" height="86" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="22" fill="#FDEFDD"/>
+              <path d="M22 34c-7 0-12 3-12 6v4h24v-4c0-3-5-6-12-6z" fill="var(--uniform)"/>
+              <path d="M17 30l5 6 5-6" fill="none" stroke="#fff" stroke-width="2"/>
+              <circle cx="22" cy="18" r="9" fill="var(--skin)"/>
+              <path d="M13 18c0-6 18-6 18 0 0-8-18-8-18 0z" fill="#3C2A1E"/>
+            </svg>
+            <div class="hero-name">Thilak</div>
+            <div class="hero-sub">Grade 11 · A · Science Stream (Computer Science)</div>
+          </div>
+
+          <div class="stat-pair">
+            <div class="stat-box"><div class="v">92%</div><div class="l">Attendance</div></div>
+            <div class="stat-box"><div class="v">6🔥</div><div class="l">Day streak</div></div>
+            <div class="stat-box"><div class="v">420</div><div class="l">Total XP</div></div>
+          </div>
+
+          <h2 class="section">Performance</h2>
+          <div class="card">
+            <div class="perf-row"><div class="lbl">Physics</div><div class="perf-track"><div class="perf-fill" style="width:82%;"></div></div><div class="perf-pct">82%</div></div>
+            <div class="perf-row"><div class="lbl">Chemistry</div><div class="perf-track"><div class="perf-fill" style="width:76%;"></div></div><div class="perf-pct">76%</div></div>
+            <div class="perf-row"><div class="lbl">Maths</div><div class="perf-track"><div class="perf-fill" style="width:91%;"></div></div><div class="perf-pct">91%</div></div>
+            <div class="perf-row"><div class="lbl">Computer Sci</div><div class="perf-track"><div class="perf-fill" style="width:95%;"></div></div><div class="perf-pct">95%</div></div>
+            <div class="perf-row"><div class="lbl">English</div><div class="perf-track"><div class="perf-fill" style="width:70%;"></div></div><div class="perf-pct">70%</div></div>
+          </div>
+
+          <h2 class="section">Achievements</h2>
+          <div class="card">
+            <span class="badge">🏅 Perfect Week</span>
+            <span class="badge">📐 Maths Streak x10</span>
+            <span class="badge">💬 Doubt Solver</span>
+            <span class="badge">⭐ Top 5 Finisher</span>
+          </div>
+
+          <h2 class="section">Rank tier</h2>
+          <div class="card">
+            <div class="tier-track">
+              <div class="tier-step reached"><div class="tier-dot">🥉</div><div class="tier-lbl">Bronze</div></div>
+              <div class="tier-step reached"><div class="tier-dot">🥈</div><div class="tier-lbl">Silver</div></div>
+              <div class="tier-step reached"><div class="tier-dot">🥇</div><div class="tier-lbl">Gold</div></div>
+              <div class="tier-step reached current"><div class="tier-dot">💠</div><div class="tier-lbl">Platinum</div></div>
+              <div class="tier-step"><div class="tier-dot">💎</div><div class="tier-lbl">Diamond</div></div>
+              <div class="tier-step"><div class="tier-dot">👑</div><div class="tier-lbl">Grandmst</div></div>
+            </div>
+            <div class="perf-track" style="margin-top:8px;"><div class="perf-fill" style="width:58%; background:linear-gradient(90deg, var(--coral), #FFA77A);"></div></div>
+            <div class="task-sub" style="margin-top:5px;">180 XP to reach Diamond</div>
+          </div>
+
+          <button class="btn ghost" style="margin-top:4px;" onclick="showStudentScreen('s-rank')">View class leaderboard →</button>
+        </div>
+
+
+        <div class="screen screen-hidden" id="s-tasks">
+          <div class="back-row"><div class="back-btn" onclick="showStudentScreen('s-home')">←</div><div><h1 style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Daily Tasks</h1><p>Teacher work + your personal study tasks</p></div><div class="avatar-ico">✓</div></div>
+          <div class="card">
+            <div class="task-row"><span class="chip done">Done</span><div style="flex:1"><div class="task-title">Chemistry — Chapter 4 worksheet</div><div class="task-sub">Teacher assigned · Due today</div></div><span>+20 XP</span></div>
+            <div class="task-row"><span class="chip pending">Pending</span><div style="flex:1"><div class="task-title">Physics — Numericals 1–10</div><div class="task-sub">Teacher assigned · Due tomorrow</div></div><button class="btn small" onclick="completeTask(this)">Done</button></div>
+            <div class="task-row"><span class="chip pending">Personal</span><div style="flex:1"><div class="task-title">Revise Maths — Trigonometry</div><div class="task-sub">Added by you</div></div><button class="btn small" onclick="completeTask(this)">Done</button></div>
+          </div>
+          <button class="btn" onclick="addPersonalTask()">+ Add Personal Task</button>
+          <div class="card" style="margin-top:10px"><div class="task-title">Today's progress</div><div class="perf-track" style="margin-top:8px"><div class="perf-fill" style="width:67%"></div></div><div class="task-sub" style="margin-top:5px">2 of 3 tasks completed · 440 XP</div></div>
+        </div>
+
+        <div class="screen screen-hidden" id="s-revision">
+          <div class="back-row"><div class="back-btn" onclick="showStudentScreen('s-home')">←</div><div><h1 style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Revision Planner</h1><p>Exam-focused plan using your subject difficulty</p></div><div class="avatar-ico" style="background:var(--amber);">R</div></div>
+          <div class="card"><div class="task-title">Half-yearly exams · 12 Oct</div><div class="task-sub">Planner prioritizes your high-difficulty subjects.</div></div>
+          <h2 class="section">Rate subject difficulty</h2>
+          <div class="card"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="diff-chip sel" onclick="setDiff(this)">Physics · High</span><span class="diff-chip" onclick="setDiff(this)">Chemistry · Medium</span><span class="diff-chip" onclick="setDiff(this)">Maths · High</span><span class="diff-chip" onclick="setDiff(this)">English · Low</span></div></div>
+          <h2 class="section">Today's revision</h2>
+          <div class="card"><div class="task-row"><div style="flex:1"><div class="task-title">Physics — Laws of Motion</div><div class="task-sub">45 min · Priority High</div></div><span class="chip coral">Today</span></div><div class="task-row"><div style="flex:1"><div class="task-title">Maths — Trigonometry</div><div class="task-sub">40 min · Priority High</div></div><span class="chip coral">Today</span></div><div class="task-row"><div style="flex:1"><div class="task-title">English — Literature</div><div class="task-sub">20 min · Priority Low</div></div><span class="chip lilac">Tomorrow</span></div></div>
+        </div>
+
+        <div class="screen screen-hidden" id="s-materials">
+          <div class="back-row"><div class="back-btn" onclick="showStudentScreen('s-home')">←</div><div><h1 style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Study Materials</h1><p>Teacher-shared resources</p></div><div class="avatar-ico" style="background:var(--sage);">M</div></div>
+          <div class="card"><div class="task-row"><div style="flex:1"><div class="task-title">📄 Chemistry Notes — PDF</div><div class="task-sub">Chapter 4 · Smt. Manochitra</div></div><button class="btn small" onclick="showToast('student','PDF opened')">Open</button></div><div class="task-row"><div style="flex:1"><div class="task-title">📊 Physics Revision — PPT</div><div class="task-sub">Motion · Mr. Ravi Kumar</div></div><button class="btn small" onclick="showToast('student','PPT opened')">Open</button></div><div class="task-row"><div style="flex:1"><div class="task-title">🎥 Chemistry Concept Video</div><div class="task-sub">45 min · Teacher upload</div></div><button class="btn small" onclick="showToast('student','Video opened')">Watch</button></div><div class="task-row"><div style="flex:1"><div class="task-title">📝 Maths Practice — DOCX</div><div class="task-sub">Trigonometry · Mr. Ravi Kumar</div></div><button class="btn small" onclick="showToast('student','Document opened')">Open</button></div></div>
+        </div>
+
+        <div class="screen screen-hidden" id="s-announcements">
+          <div class="back-row"><div class="back-btn" onclick="showStudentScreen('s-home')">←</div><div><h1 style="font-family:var(--font-display); font-size:18px; margin:0; color:var(--ink);">Announcements</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Class 11-A updates</p></div></div>
+          <div class="card"><div class="task-title">Science Unit Test</div><div class="task-sub">24 Sep · Smt. Manochitra</div><p style="font-size:12px;color:var(--ink-soft)">Revise Chapters 3 and 4 before the test.</p></div>
+          <div class="card"><div class="task-title">Project Submission</div><div class="task-sub">2 Oct · Class 11-A</div><p style="font-size:12px;color:var(--ink-soft)">Submit the completed project through your teacher.</p></div>
+        </div>
+
+        <div class="rank-celebrate" id="rank-celebrate">
+          <div class="rank-celebrate-card">
+            <div class="rank-ribbon">LEVEL UP</div>
+            <div class="rank-emblem" id="rank-emblem">💠</div>
+            <h2 id="rank-celebrate-title">Congratulations!</h2>
+            <p id="rank-celebrate-sub">You are in the Platinum rank</p>
+          </div>
+        </div>
+
+        <div class="toast" id="toast-student"></div>
+
+        <div class="fab-col" id="fab-student">
+          <button class="fab" onclick="openDrawer('tt-student')">🕒</button>
+          <button class="fab" onclick="openDrawer('due-student')">⏰</button>
+          <button class="fab alt" onclick="openModal('ann-student')">📢</button>
+        </div>
+
+        <div class="tabbar">
+          <button class="active" data-screen="s-home"><span class="ic">🏠</span>Home</button>
+          <button data-screen="s-tasks"><span class="ic">✓</span>Tasks</button>
+          <button data-screen="s-revision"><span class="ic">📅</span>Revision</button>
+          <button data-screen="s-rank"><span class="ic">🏆</span>Rank</button>
+        </div>
+      </div>
+
+      <!-- ============ TEACHER ============ -->
+      <div id="teacher-root" class="screen-hidden">
+        <div class="screen" id="t-dash">
+          <div class="role-header"><div><h1>Class 11-A</h1><p>Smt. Manochitra · Science</p></div><div class="avatar-ico" style="background:var(--sage);">M</div></div>
+          <div style="display:flex; gap:8px; margin-bottom:6px;">
+            <div class="card" style="flex:1;"><div class="task-sub">Completion today</div><div style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--ink);">78%</div></div>
+            <div class="card" style="flex:1;"><div class="task-sub">Doubts pending</div><div style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--coral-dark);">3</div></div>
+          </div>
+          <h2 class="section">Posted today</h2>
+          <div class="card">
+            <div class="task-row"><div><div class="task-title">Homework — Ch.4 Photosynthesis</div><div class="task-sub">Sent to Class 11-A · 26 of 34 done</div></div></div>
+            <div class="task-row"><div><div class="task-title">Announcement — Unit test on 24 Sep</div><div class="task-sub">Sent to Class 11-A</div></div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px">
+            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-materials']').click()">📚 Materials</button>
+            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-announcements']').click()">📢 Announce</button>
+            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-engagement']').click()">📈 Engagement</button>
+            <button class="btn ghost small" onclick="document.querySelector('#teacher-root .tabbar button[data-screen='t-doubts']').click()">💬 Doubts</button>
+          </div>
+        </div>
+
+        <div class="screen screen-hidden" id="t-post">
+          <div class="back-row"><div class="back-btn" onclick="showTeacherScreen('t-dash')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Post homework</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Visible to Class 11-A only</p></div><div class="avatar-ico" style="background:var(--sage);">M</div></div>
+          <div class="card">
+            <label class="field-label">Subject</label>
+            <select><option>Science</option><option>Maths</option><option>English</option></select>
+            <label class="field-label">Description</label>
+            <textarea rows="3" placeholder="e.g. Complete worksheet on photosynthesis, pg 12-14"></textarea>
+            <label class="field-label">Due date</label>
+            <input type="text" placeholder="Fri, 26 Sep" />
+            <button class="btn ghost" style="margin-bottom:9px;">📎 Attach material</button>
+            <button class="btn" onclick="showToast('teacher','Posted to Class 11-A')">Post to class</button>
+          </div>
+        </div>
+
+        <div class="screen screen-hidden" id="t-doubts">
+          <div class="back-row"><div class="back-btn" onclick="showTeacherScreen('t-dash')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Doubt inbox</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">3 pending replies</p></div><div class="avatar-ico" style="background:var(--sage);">M</div></div>
+          <div class="card" style="padding:4px 14px;">
+            <div class="thread"><div class="avatar-ico" style="background:var(--coral); font-size:11px;">RS</div><div style="flex:1;"><div class="task-title">Ravi S.</div><div class="task-sub">Why does the plant wilt at night?</div></div><span class="chip pending">New</span></div>
+          </div>
+          <h2 class="section">Reply</h2>
+          <div class="card"><textarea rows="2" placeholder="Type a private reply..."></textarea><button class="btn" onclick="showToast('teacher','Reply sent to student')">Send reply</button></div>
+        </div>
+
+
+        <div class="screen screen-hidden" id="t-materials">
+          <div class="back-row"><div class="back-btn" onclick="showTeacherScreen('t-dash')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Study materials</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Upload resources for Class 11-A</p></div><div class="avatar-ico" style="background:var(--sage);">M</div></div>
+          <div class="card"><label class="field-label">Subject</label><select><option>Science</option><option>Maths</option><option>English</option></select><label class="field-label">Material title</label><input placeholder="e.g. Chapter 4 revision notes"><label class="field-label">File</label><button class="btn ghost" onclick="showToast('teacher','File selected for demo')">📎 PDF / DOCX / PPT / Video</button><button class="btn" style="margin-top:9px" onclick="showToast('teacher','Study material uploaded')">Upload material</button></div>
+          <div class="card"><div class="task-title">Recent uploads</div><div class="task-row"><div style="flex:1"><div class="task-title">📄 Chapter 4 Notes</div><div class="task-sub">PDF · 34 views</div></div></div><div class="task-row"><div style="flex:1"><div class="task-title">🎥 Photosynthesis Concept</div><div class="task-sub">Video · 28 views</div></div></div></div>
+        </div>
+        <div class="screen screen-hidden" id="t-announcements">
+          <div class="back-row"><div class="back-btn" onclick="showTeacherScreen('t-dash')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Announcements</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Communicate with Class 11-A</p></div><div class="avatar-ico" style="background:var(--coral);">!</div></div>
+          <div class="card"><textarea rows="3" placeholder="Write an announcement for your class..."></textarea><button class="btn" onclick="showToast('teacher','Announcement posted')">Post announcement</button></div>
+          <div class="card"><div class="task-title">Previous announcement</div><div class="task-sub">Unit test on 24 Sep · Posted today</div></div>
+        </div>
+        <div class="screen screen-hidden" id="t-engagement">
+          <div class="back-row"><div class="back-btn" onclick="showTeacherScreen('t-dash')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Class engagement</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Completion trends · Class 11-A</p></div><div class="avatar-ico" style="background:var(--sage);">78</div></div>
+          <div class="card"><div class="task-title">Today's completion</div><div style="font-family:var(--font-display);font-size:28px;font-weight:700;margin:8px 0">78%</div><div class="perf-track"><div class="perf-fill" style="width:78%"></div></div><div class="task-sub" style="margin-top:6px">26 of 34 students completed today's assigned work.</div></div>
+          <div class="card"><div class="task-row"><div style="flex:1"><div class="task-title">🔥 12 students</div><div class="task-sub">Maintaining a 5+ day streak</div></div></div><div class="task-row"><div style="flex:1"><div class="task-title">🏆 Weekly leaderboard</div><div class="task-sub">Available to students by class and section</div></div></div></div>
+        </div>
+
+        <div class="toast" id="toast-teacher"></div>
+
+        <div class="fab-col" id="fab-teacher">
+          <button class="fab" onclick="openModal('ann-teacher')">📣</button>
+          <button class="fab alt" onclick="openModal('chat-teacher')">💬</button>
+        </div>
+
+        <div class="tabbar">
+          <button class="active" data-screen="t-dash"><span class="ic">📊</span>Dashboard</button>
+          <button data-screen="t-post"><span class="ic">✏️</span>Post</button>
+          <button data-screen="t-materials"><span class="ic">📚</span>Files</button>
+          <button data-screen="t-doubts"><span class="ic">📥</span>Doubts</button>
+          <button data-screen="t-engagement"><span class="ic">📈</span>Stats</button>
+        </div>
+      </div>
+
+      <!-- ============ PARENT ============ -->
+      <div id="parent-root" class="screen-hidden">
+        <div class="screen" id="p-today">
+          <div class="role-header"><div><h1>Thilak's day</h1><p>Class 11-A · Thursday</p></div><svg class="uniform-avatar student-mini-avatar" width="34" height="34" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="22" fill="#FDEFDD"/>
+              <path d="M22 34c-7 0-12 3-12 6v4h24v-4c0-3-5-6-12-6z" fill="var(--uniform)"/>
+              <path d="M17 30l5 6 5-6" fill="none" stroke="#fff" stroke-width="2"/>
+              <circle cx="22" cy="18" r="9" fill="var(--skin)"/>
+              <path d="M13 18c0-6 18-6 18 0 0-8-18-8-18 0z" fill="#3C2A1E"/>
+            </svg></div>
+          <div class="card" style="display:flex; align-items:center; gap:14px;">
+            <div style="width:52px; height:52px; border-radius:50%; background:conic-gradient(var(--sage) 0deg 252deg, #EFE7D2 252deg 360deg); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <div style="width:38px; height:38px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--ink);">70%</div>
+            </div>
+            <div><div class="task-title">7 of 10 tasks done</div><div class="task-sub">Right on track for today</div></div>
+          </div>
+          <h2 class="section">Task status</h2>
+          <div class="card">
+            <div class="task-row"><span class="chip done">Done</span><div style="margin-left:8px;"><div class="task-title">Science worksheet</div></div></div>
+            <div class="task-row"><span class="chip done">Done</span><div style="margin-left:8px;"><div class="task-title">Maths practice set</div></div></div>
+            <div class="task-row"><span class="chip pending">Pending</span><div style="margin-left:8px;"><div class="task-title">English reading — Ch.5</div></div></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:2px;">
+            <div class="stat-box"><div class="v">92%</div><div class="l">Attendance</div></div>
+            <div class="stat-box"><div class="v">6🔥</div><div class="l">Day streak</div></div>
+            <div class="stat-box"><div class="v">420</div><div class="l">XP earned</div></div>
+          </div>
+          <h2 class="section">Parent insights</h2>
+          <div class="card">
+            <div class="task-row"><div style="flex:1"><div class="task-title">⏰ Next deadline</div><div class="task-sub">English reading — Ch.5 · Tomorrow</div></div></div>
+            <div class="task-row"><div style="flex:1"><div class="task-title">📚 Revision focus</div><div class="task-sub">Physics and Maths are marked high difficulty.</div></div></div>
+            <div class="task-row"><div style="flex:1"><div class="task-title">💬 Teacher update</div><div class="task-sub">No pending private doubt replies for Thilak.</div></div></div>
+          </div>
+        </div>
+
+        <div class="screen screen-hidden" id="p-perf">
+          <div class="back-row"><div class="back-btn" onclick="showParentScreen('p-today')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Performance</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Subject-wise progress</p></div><svg class="uniform-avatar student-mini-avatar" width="34" height="34" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="22" fill="#FDEFDD"/>
+              <path d="M22 34c-7 0-12 3-12 6v4h24v-4c0-3-5-6-12-6z" fill="var(--uniform)"/>
+              <path d="M17 30l5 6 5-6" fill="none" stroke="#fff" stroke-width="2"/>
+              <circle cx="22" cy="18" r="9" fill="var(--skin)"/>
+              <path d="M13 18c0-6 18-6 18 0 0-8-18-8-18 0z" fill="#3C2A1E"/>
+            </svg></div>
+          <div class="card">
+            <div class="perf-row"><div class="lbl">Physics</div><div class="perf-track"><div class="perf-fill" style="width:82%;"></div></div><div class="perf-pct">82%</div></div>
+            <div class="perf-row"><div class="lbl">Chemistry</div><div class="perf-track"><div class="perf-fill" style="width:76%;"></div></div><div class="perf-pct">76%</div></div>
+            <div class="perf-row"><div class="lbl">Maths</div><div class="perf-track"><div class="perf-fill" style="width:91%;"></div></div><div class="perf-pct">91%</div></div>
+            <div class="perf-row"><div class="lbl">Computer Sci</div><div class="perf-track"><div class="perf-fill" style="width:95%;"></div></div><div class="perf-pct">95%</div></div>
+            <div class="perf-row"><div class="lbl">English</div><div class="perf-track"><div class="perf-fill" style="width:70%;"></div></div><div class="perf-pct">70%</div></div>
+          </div>
+        </div>
+
+        <div class="screen screen-hidden" id="p-exams">
+          <div class="back-row"><div class="back-btn" onclick="showParentScreen('p-today')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Exam schedule</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">Next 3 weeks</p></div><svg class="uniform-avatar student-mini-avatar" width="34" height="34" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="22" fill="#FDEFDD"/>
+              <path d="M22 34c-7 0-12 3-12 6v4h24v-4c0-3-5-6-12-6z" fill="var(--uniform)"/>
+              <path d="M17 30l5 6 5-6" fill="none" stroke="#fff" stroke-width="2"/>
+              <circle cx="22" cy="18" r="9" fill="var(--skin)"/>
+              <path d="M13 18c0-6 18-6 18 0 0-8-18-8-18 0z" fill="#3C2A1E"/>
+            </svg></div>
+          <div class="card">
+            <div class="task-row"><div><div class="task-title">Science — Unit Test</div><div class="task-sub">24 Sep</div></div></div>
+            <div class="task-row"><div><div class="task-title">Maths — Unit Test</div><div class="task-sub">29 Sep</div></div></div>
+            <div class="task-row"><div><div class="task-title">Half-yearly exams begin</div><div class="task-sub">12 Oct</div></div></div>
+          </div>
+        </div>
+
+
+        <div class="screen screen-hidden" id="p-announcements">
+          <div class="back-row"><div class="back-btn" onclick="showParentScreen('p-today')">←</div><div><h1 style="font-family:var(--font-display);font-size:18px;margin:0;color:var(--ink);">Announcements</h1><p style="margin:0;font-size:11.5px;color:var(--ink-soft)">School and Class 11-A</p></div></div>
+          <div class="card"><div class="task-title">Science Unit Test</div><div class="task-sub">24 Sep · Smt. Manochitra</div><p style="font-size:12px;color:var(--ink-soft)">Revision recommended before the test.</p></div>
+          <div class="card"><div class="task-title">PTA Meeting</div><div class="task-sub">3:30 PM · Next Friday</div></div>
+        </div>
+
+        <div class="fab-col" id="fab-parent">
+          <button class="fab alt" onclick="openModal('ann-parent')">📢</button>
+        </div>
+
+        <div class="tabbar">
+          <button class="active" data-screen="p-today"><span class="ic">📅</span>Today</button>
+          <button data-screen="p-perf"><span class="ic">📈</span>Progress</button>
+          <button data-screen="p-exams"><span class="ic">📝</span>Exams</button>
+          <button data-screen="p-announcements"><span class="ic">📢</span>Updates</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- drawer: tomorrow's timetable -->
+    <div class="drawer-overlay" id="tt-student" onclick="closeOverlayBg(event,'tt-student')">
+      <div class="drawer">
+        <h3>Tomorrow — Friday</h3>
+        <div class="tt-row"><div class="tt-period">1</div><div class="task-title">Physics</div><div class="tt-time">9:00</div></div>
+        <div class="tt-row"><div class="tt-period">2</div><div class="task-title">Maths</div><div class="tt-time">9:45</div></div>
+        <div class="tt-row"><div class="tt-period">3</div><div class="task-title">Computer Science</div><div class="tt-time">10:30</div></div>
+        <div class="tt-row"><div class="tt-period">4</div><div class="task-title">Chemistry</div><div class="tt-time">11:15</div></div>
+        <div class="tt-row"><div class="tt-period">5</div><div class="task-title">English</div><div class="tt-time">12:00</div></div>
+        <div class="tt-row"><div class="tt-period">6</div><div class="task-title">Lunch</div><div class="tt-time">12:45</div></div>
+        <div class="tt-row"><div class="tt-period">7</div><div class="task-title">Physics Lab</div><div class="tt-time">1:30</div></div>
+        <div class="tt-row"><div class="tt-period">8</div><div class="task-title">Maths</div><div class="tt-time">2:15</div></div>
+        <div class="tt-row"><div class="tt-period">9</div><div class="task-title">Computer Science</div><div class="tt-time">3:00</div></div>
+      </div>
+    </div>
+
+    <!-- drawer: due dates -->
+    <div class="drawer-overlay" id="due-student" onclick="closeOverlayBg(event,'due-student')">
+      <div class="drawer">
+        <h3>Due dates</h3>
+        <div class="task-row"><div><div class="task-title">Maths — Worksheet 4</div><div class="task-sub">Due Fri, 26 Sep</div></div></div>
+        <div class="task-row"><div><div class="task-title">Physics — Assignment 2</div><div class="task-sub">Due Mon, 29 Sep</div></div></div>
+        <div class="task-row"><div><div class="task-title">English — Essay submission</div><div class="task-sub">Due Wed, 1 Oct</div></div></div>
+        <div class="task-row"><div><div class="task-title">Computer Science — Lab record</div><div class="task-sub">Due Thu, 2 Oct</div></div></div>
+      </div>
+    </div>
+
+    <!-- modals: announcements (one per role, same content) -->
+    <div class="modal-overlay" id="ann-student" onclick="closeOverlayBg(event,'ann-student')">
+      <div class="modal"><button class="close-x" onclick="closeModal('ann-student')">✕</button><h3>Announcements</h3>
+        <div class="card"><div class="task-title">Unit test — Science</div><div class="task-sub">24 Sep · Smt. Manochitra</div></div>
+        <div class="card"><div class="task-title">Sports day postponed</div><div class="task-sub">Moved to 3 Oct</div></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="ann-teacher" onclick="closeOverlayBg(event,'ann-teacher')">
+      <div class="modal"><button class="close-x" onclick="closeModal('ann-teacher')">✕</button><h3>Announcements</h3>
+        <div class="card"><div class="task-title">Unit test — Science</div><div class="task-sub">24 Sep · posted by you</div></div>
+        <div class="card"><div class="task-title">PTA meeting next Friday</div><div class="task-sub">3:30 PM, Class 11-A room</div></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="ann-parent" onclick="closeOverlayBg(event,'ann-parent')">
+      <div class="modal"><button class="close-x" onclick="closeModal('ann-parent')">✕</button><h3>Announcements</h3>
+        <div class="card"><div class="task-title">Unit test — Science</div><div class="task-sub">24 Sep · Smt. Manochitra</div></div>
+        <div class="card"><div class="task-title">PTA meeting next Friday</div><div class="task-sub">3:30 PM, Class 11-A room</div></div>
+      </div>
+    </div>
+
+    <!-- teacher quick chat modal -->
+    <div class="modal-overlay" id="chat-teacher" onclick="closeOverlayBg(event,'chat-teacher')">
+      <div class="modal"><button class="close-x" onclick="closeModal('chat-teacher')">✕</button><h3>Clarify a doubt</h3>
+        <div class="card">
+          <div class="task-title">Ravi S. — Maths</div>
+          <div class="task-sub" style="margin-bottom:8px;">"Confused about the 2nd algebra problem"</div>
+          <textarea rows="2" placeholder="Type a quick reply..."></textarea>
+          <button class="btn" onclick="showToast('teacher','Reply sent'); closeModal('chat-teacher')">Send</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="footnote">Prototype for pitch purposes · dummy data only</div>
+
+<script>
+  const roleBtns = document.querySelectorAll('#roleSwitch button');
+  const roots = { student: document.getElementById('student-root'), teacher: document.getElementById('teacher-root'), parent: document.getElementById('parent-root') };
+  roleBtns.forEach(b => b.addEventListener('click', () => {
+    roleBtns.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    Object.values(roots).forEach(r => r.classList.add('screen-hidden'));
+    roots[b.dataset.role].classList.remove('screen-hidden');
+  }));
+
+  document.querySelectorAll('.tabbar').forEach(bar => {
+    bar.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-screen]');
+      if(!btn) return;
+      const root = bar.parentElement;
+      root.querySelectorAll('.tabbar button').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      root.querySelectorAll('.screen').forEach(s => s.classList.add('screen-hidden'));
+      const target = document.getElementById(btn.dataset.screen);
+      target.classList.remove('screen-hidden');
+      target.classList.add('fade-in');
+      if(btn.dataset.screen === 's-rank') showRankCelebration();
+    });
+  });
+
+  function showStudentScreen(id){
+    const root = document.getElementById('student-root');
+    root.querySelectorAll('.screen').forEach(s => s.classList.add('screen-hidden'));
+    const target = document.getElementById(id);
+    target.classList.remove('screen-hidden');
+    target.classList.add('fade-in');
+    root.querySelectorAll('.tabbar button').forEach(x => x.classList.remove('active'));
+    const match = root.querySelector('.tabbar button[data-screen="'+id+'"]');
+    if(match) match.classList.add('active');
+    if(id === 's-rank') showRankCelebration();
+  }
+
+  function showTeacherScreen(id){
+    const root = document.getElementById('teacher-root');
+    root.querySelectorAll('.screen').forEach(s => s.classList.add('screen-hidden'));
+    const target = document.getElementById(id);
+    target.classList.remove('screen-hidden');
+    target.classList.add('fade-in');
+    root.querySelectorAll('.tabbar button').forEach(x => x.classList.remove('active'));
+    const match = root.querySelector('.tabbar button[data-screen="'+id+'"]');
+    if(match) match.classList.add('active');
+  }
+
+  function showParentScreen(id){
+    const root = document.getElementById('parent-root');
+    root.querySelectorAll('.screen').forEach(s => s.classList.add('screen-hidden'));
+    const target = document.getElementById(id);
+    target.classList.remove('screen-hidden');
+    target.classList.add('fade-in');
+    root.querySelectorAll('.tabbar button').forEach(x => x.classList.remove('active'));
+    const match = root.querySelector('.tabbar button[data-screen="'+id+'"]');
+    if(match) match.classList.add('active');
+  }
+
+  function showRankCelebration(){
+    const overlay = document.getElementById('rank-celebrate');
+    const emblem = document.getElementById('rank-emblem');
+    const title = document.getElementById('rank-celebrate-title');
+    const sub = document.getElementById('rank-celebrate-sub');
+    const tier = 'Platinum';
+    const data = { Gold:'🥇', Platinum:'💠', Diamond:'💎' };
+    emblem.textContent = data[tier] || '🏆';
+    title.textContent = 'Congratulations!';
+    sub.textContent = 'You are in the ' + tier + ' rank';
+    overlay.classList.add('show');
+    clearTimeout(window.rankTimer);
+    window.rankTimer = setTimeout(() => overlay.classList.remove('show'), 1500);
+  }
+
+  const subjectData = {
+    'Homework': [['Ch.4 exercise','Due Fri, 26 Sep'],['Revision worksheet','Due Mon, 29 Sep']],
+    'Worksheet': [['Practice sheet 3','Uploaded 20 Sep'],['Practice sheet 4','Uploaded 21 Sep']],
+    'PYQs & FAQs': [['2024 board question set','12 questions'],['Common doubts — Unit 3','FAQ sheet']],
+    'Assignment': [['Project — Unit 2 application','Due 2 Oct'],['Group assignment','Due 5 Oct']],
+    'Ask a private doubt': [['Have a question?','Only your subject teacher will see it']]
+  };
+  function openSubject(name, icon){
+    document.getElementById('subjTitle').textContent = icon + '  ' + name;
+    const wrap = document.getElementById('subjOptions');
+    wrap.innerHTML = '';
+    let i = 1;
+    for(const label in subjectData){
+      const row = document.createElement('div');
+      row.className = 'opt-row';
+      const items = subjectData[label].map(it => `<div class="opt-item"><b>${it[0]}</b><br>${it[1]}</div>`).join('');
+      const extra = label === 'Ask a private doubt' ? `<div style="margin-top:6px;"><textarea rows="2" placeholder="Type your question..."></textarea><button class="btn small" onclick="event.stopPropagation(); showToast('student','Doubt sent to '+'${name}'+' teacher')">Send</button></div>` : '';
+      row.innerHTML = `<div class="opt-head" onclick="this.parentElement.classList.toggle('open')"><div class="num">${i}</div><div class="task-title">${label}</div><div class="chev">›</div></div><div class="opt-body">${items}${extra}</div>`;
+      wrap.appendChild(row);
+      i++;
+    }
+    showStudentScreen('s-subject');
+  }
+
+  function completeTask(btn){ btn.parentElement.innerHTML = '<span class="chip done">Done</span><span class="task-sub" style="margin-left:8px">+20 XP added</span>'; showToast('student','Task completed · +20 XP'); }
+  function addPersonalTask(){ const n=prompt('Add a personal study task:'); if(n){ showToast('student','Personal task added: '+n); } }
+
+  function setDiff(el){ [...el.parentElement.children].forEach(c => c.classList.remove('sel')); el.classList.add('sel'); }
+
+  function openThread(){
+    alert("Thread view:\n\nYou: Why does the plant wilt at night?\n\nSmt. Manochitra: Good question — at night, without sunlight, the plant can't photosynthesize, so it relies on stored energy and sometimes loses turgor pressure. We'll cover this in Thursday's class!");
+  }
+
+  function showToast(scope, msg){
+    const el = document.getElementById('toast-' + scope);
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  function openDrawer(id){ document.getElementById(id).classList.add('show'); }
+  function openModal(id){ document.getElementById(id).classList.add('show'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+  function closeOverlayBg(e, id){ if(e.target.id === id) document.getElementById(id).classList.remove('show'); }
+</script>
+
+<script>
+  // High-end game-style boot sequence: the bar and percentage move together from 0 to 100.
+  window.addEventListener('load', function () {
+    var splash = document.getElementById('edusync-splash');
+    var bar = document.getElementById('splash-loader-bar');
+    var percent = document.getElementById('splash-percent');
+    var status = document.getElementById('splash-status');
+    var stage = document.getElementById('splash-stage');
+    var start = performance.now();
+    var duration = 5500;
+    var messages = [
+      [0, 'POWERING UP THE LEARNING CORE...', 'BOOT 01'],
+      [18, 'SYNCING STUDENT PROFILES...', 'SYNC 02'],
+      [38, 'LOADING CLASSES & SUBJECTS...', 'DATA 03'],
+      [58, 'CALIBRATING YOUR DASHBOARD...', 'CORE 04'],
+      [78, 'CONNECTING TEACHERS & PARENTS...', 'LINK 05'],
+      [92, 'FINALIZING THE EXPERIENCE...', 'FINAL 06'],
+      [100, 'WELCOME TO EDUSYNC.', 'READY 07']
+    ];
+
+    function update(t) {
+      var progress = Math.min(100, ((t - start) / duration) * 100);
+      var whole = Math.floor(progress);
+      if (bar) bar.style.width = progress + '%';
+      if (percent) percent.textContent = whole + '%';
+
+      var current = messages[0];
+      for (var i = 0; i < messages.length; i++) {
+        if (whole >= messages[i][0]) current = messages[i];
+      }
+      if (status) status.textContent = current[1];
+      if (stage) stage.textContent = current[2];
+
+      if (progress < 100) {
+        requestAnimationFrame(update);
+      } else {
+        window.setTimeout(function () {
+          if (splash) splash.classList.add('is-hidden');
+          window.setTimeout(function () {
+            if (splash) splash.remove();
+          }, 700);
+        }, 250);
+      }
+    }
+    requestAnimationFrame(update);
+  });
+</script>
+</body>
+</html>
